@@ -1,0 +1,87 @@
+Checks: '
+  bug-prone-*,
+
+  cppcoreguidelines-*,
+    -cppcoreguidelines-avoid-magic-numbers, # Alias, seems to not respect the IgnoredIntegerValues option,
+
+  google-*,
+    -google-build-using-namespace, # Using non-std namespace in headers is generally OK,
+    -google-objc-*, # No Objective C here,
+    -google-readability-namespace-comments, # No thanks,
+    -google-readability-todo, # Very internal Google specific,
+    
+  misc-*,
+    -misc-include-cleaner, # Too many irrelevant warnings,
+    -misc-use-anonymous-namespace, # Static was un-deprecated and is typically fine,
+    
+  modernize-*,
+    -modernize-use-nullptr, # Crashes for some reason,
+    -modernize-use-trailing-return-type, # No thanks,
+    
+  performance-*,
+    
+  portability-*,
+    
+  readability-*,
+    -readability-identifier-length, # Sometimes your variables SHOULD be short,
+    -readability-function-cognitive-complexity, # Not a fan of this metric,
+    -readability-math-missing-parentheses, # There are times when this is unclear but this warning is too aggressive for general use,
+    -readability-redundant-inline-specifier, # Redundancy is OK,
+    -readability-uppercase-literal-suffix, # Not sure why this check exists,
+'
+
+CheckOptions:
+ - key: bugprone-assert-side-effect.AssertMacros
+   value: "assert,_ASSERT,GADGET_ASSERT"
+   
+ - key: bugprone-misplaced-widening-cast.CheckImplicitCasts
+   value: true
+   
+ - key: bugprone-sizeof-expression.WarnOnSizeOfPointer
+   value: true
+   
+ - key: cppcoreguidelines-narrowing-conversions.PedanticMode
+   value: true
+   
+ - key: cppcoreguidelines-pro-type-const-cast.StrictMode
+   value: true
+   
+ - key: cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+   value: true
+   
+ - key: cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions
+   value: true
+   
+ - key: cppcoreguidelines-special-member-functions.AllowImplicitlyDeletedCopyOrMove
+   value: true
+
+ - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+   value: true
+   
+ - key: misc-unused-parameters.IgnoreVirtual
+   value: true
+   
+ - key: modernize-avoid-c-arrays.AllowStringArrays
+   value: true
+   
+ - key: modernize-min-max-use-initializer-list.IgnoreTrivialTypesOfSizeAbove
+   value: 64
+   
+ - key: modernize-use-using.IgnoreExternC
+   value: true
+   
+ - key: performance-inefficient-string-concatenation.StrictMode
+   value: true
+   
+ - key: readability-magic-numbers.IgnoredIntegerValues
+   value: 1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13; 14; 15; 16; 36; 255, 1024;
+   
+ - key: readability-magic-numbers.IgnoredFloatingPointValues
+   value: 0.0001; 0.001; 0.01; 0.1; 0.25; 0.5; 0.75; 0.99; 1.0; 2.0; 10.0; 100.0; 1000.0;
+   
+ - key: readability-magic-numbers.IgnorePowersOf2IntegerValues
+   value: true
+   
+ - key: readability-simplify-boolean-expr.IgnoreMacros
+   value: true
+   
