@@ -7,6 +7,7 @@
 
 #include "FrameCounter.hpp"
 #include "ImageView.hpp"
+#include "Mesh.hpp"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
@@ -24,6 +25,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	auto curTime = prevTime;
 
 	auto imageView = RS::ImageView(screenSurface);
+
+	auto triMesh = RS::Mesh();
+	triMesh.vertices.reserve(3);
+	triMesh.vertices.emplace_back(Gadget::Vector3(-5.0, -5.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(5.0, -5.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 5.0, 0.0));
+	triMesh.color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
+
 	while (true)
 	{
 		SDL_Event e{};
