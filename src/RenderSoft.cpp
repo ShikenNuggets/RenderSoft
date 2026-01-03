@@ -1,21 +1,27 @@
 #include "RenderSoft.hpp"
 
 #include <chrono>
-#include <iostream>
+#include <print>
 
 #include <GCore/Window.hpp>
 
+#include "FrameCounter.hpp"
 #include "ImageView.hpp"
 
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
-	std::cout << "Hello, World!\n";
+	std::println("Hello, World!");
 
 	//auto window = new Gadget::Window(800, 600, Gadget::RenderAPI::None);
 	//delete window;
 
 	SDL_Window* window = SDL_CreateWindow("Software Rendering Surface", 800, 600, 0);
 	SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
+
+	RS::FrameCounter counter;
+
+	auto prevTime = std::chrono::system_clock::now().time_since_epoch();
+	auto curTime = prevTime;
 
 	auto imageView = RS::ImageView(screenSurface);
 	while (true)
@@ -25,6 +31,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		{
 			break;
 		}
+
+		curTime = std::chrono::system_clock::now().time_since_epoch();
+		counter.AddFrameTime(std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime));
 
 		auto currentTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -40,8 +49,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		imageView.Unlock();
 
 		SDL_UpdateWindowSurface(window);
+		prevTime = curTime;
 	}
 
 	SDL_DestroyWindow(window);
+	std::println("Average frame time: {:.3f}ms", counter.GetAverageFrameTimeInMicroseconds() / 1'000.0);
 	return 0;
 }
