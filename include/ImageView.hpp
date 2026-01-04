@@ -19,6 +19,9 @@ namespace RS
 		void Clear(const Gadget::Vector4& color);
 		void AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color);
 
+		[[nodiscard]] int Width() const;
+		[[nodiscard]] int Height() const;
+
 	private:
 		SDL_Surface* surface;
 	};

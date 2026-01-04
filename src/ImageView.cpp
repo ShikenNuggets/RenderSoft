@@ -43,3 +43,23 @@ void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color)
 
 	pixels[y * pitchInPixels + x] = finalColor;
 }
+
+int ImageView::Width() const
+{
+	if (surface == nullptr)
+	{
+		return -1;
+	}
+
+	return surface->w;
+}
+
+int ImageView::Height() const
+{
+	if (surface == nullptr)
+	{
+		return -1;
+	}
+
+	return surface->h;
+}
