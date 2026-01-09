@@ -22,9 +22,17 @@ static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh)
 		const auto& v1 = mesh.vertices[v + 1].position;
 		const auto& v2 = mesh.vertices[v + 2].position;
 
-		for (int y = 0; y < imageView.Height(); y++)
+		std::array<Gadget::Vector2, 3> verts = {
+			Gadget::Vector2(v0.x, v0.y),
+			Gadget::Vector2(v1.x, v1.y),
+			Gadget::Vector2(v2.x, v2.y)
+		};
+
+		const auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
+
+		for (int y = bounds.min.y; y < bounds.max.y; y++)
 		{
-			for (int x = 0; x < imageView.Width(); x++)
+			for (int x = bounds.min.x; x < bounds.max.x; x++)
 			{
 				auto p = Gadget::Vector3(x + 0.5f, y + 0.5f, 0.0f);
 
