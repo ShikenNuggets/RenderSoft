@@ -42,7 +42,16 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 			Gadget::Vector2(v2.x, v2.y)
 		};
 
-		const auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
+		auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
+
+		if (bounds.min.x >= imageView.Width() || bounds.min.y >= imageView.Height() || bounds.max.x < 0.0 || bounds.max.y < 0.0)
+		{
+			continue; // Early out, triangle bounds are fully off-screen
+		}
+
+		// Ignore any part of the bounds that are off-screen
+		bounds.max.x = std::min<double>(bounds.max.x, imageView.Width() - 1);
+		bounds.max.y = std::min<double>(bounds.max.y, imageView.Height() - 1);
 
 		for (int y = bounds.min.y; y < bounds.max.y; y++)
 		{
@@ -85,9 +94,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto triMesh = RS::Mesh();
 	triMesh.vertices.reserve(3);
-	triMesh.vertices.emplace_back(Gadget::Vector3(400.0, 100.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(200.0, 500.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 500.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
 	triMesh.color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
 
 	while (true)
@@ -114,7 +123,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 		imageView.Clear(Gadget::Vector4(0.1, 0.1, 0.1, 1.0));
 
-		Draw(imageView, RS::DrawCall(triMesh));
+		for (int i = 0; i < 64; i++)
+		{
+			Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(100.0 * (i % 8), 100.0 * (i / 8), 0.0))));
+		}
 
 		imageView.Unlock();
 
