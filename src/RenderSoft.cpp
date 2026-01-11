@@ -9,12 +9,19 @@
 #include "ImageView.hpp"
 #include "Mesh.hpp"
 
+enum class CullMode : uint8_t
+{
+	None,
+	CW,
+	CCW
+};
+
 static inline double Det2D(const Gadget::Vector3& v0, const Gadget::Vector3& v1)
 {
 	return v0.x * v1.y - v0.y * v1.x;
 }
 
-static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh)
+static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh, CullMode cullMode)
 {
 	for (size_t v = 0; v + 2 < mesh.vertices.size(); v += 3)
 	{
@@ -24,7 +31,12 @@ static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh)
 
 		auto det012 = Det2D(v1 - v0, v2 - v0);
 		const bool ccw = det012 < 0.0;
-		if (det012 < 0.0)
+		if (ccw && cullMode == CullMode::CW || !ccw && cullMode == CullMode::CCW)
+		{
+			continue; // Skip this triangle (back-face culling)
+		}
+
+		if (ccw)
 		{
 			std::swap(v1, v2);
 			det012 = -det012;
@@ -80,8 +92,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	auto triMesh = RS::Mesh();
 	triMesh.vertices.reserve(3);
 	triMesh.vertices.emplace_back(Gadget::Vector3(400.0, 100.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 500.0, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(200.0, 500.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 500.0, 0.0));
 	triMesh.color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
 
 	while (true)
@@ -108,7 +120,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 		imageView.Clear(Gadget::Vector4(0.1, 0.1, 0.1, 1.0));
 
-		Draw(imageView, triMesh);
+		Draw(imageView, triMesh, CullMode::CCW);
 
 		imageView.Unlock();
 
