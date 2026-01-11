@@ -5,33 +5,27 @@
 
 #include <GCore/Window.hpp>
 
+#include "DrawCall.hpp"
 #include "FrameCounter.hpp"
 #include "ImageView.hpp"
 #include "Mesh.hpp"
-
-enum class CullMode : uint8_t
-{
-	None,
-	CW,
-	CCW
-};
 
 static inline double Det2D(const Gadget::Vector3& v0, const Gadget::Vector3& v1)
 {
 	return v0.x * v1.y - v0.y * v1.x;
 }
 
-static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh, CullMode cullMode)
+static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 {
-	for (size_t v = 0; v + 2 < mesh.vertices.size(); v += 3)
+	for (size_t v = 0; v + 2 < drawCall.mesh.vertices.size(); v += 3)
 	{
-		auto v0 = mesh.vertices[v].position;
-		auto v1 = mesh.vertices[v + 1].position;
-		auto v2 = mesh.vertices[v + 2].position;
+		auto v0 = drawCall.transform * drawCall.mesh.vertices[v].position;
+		auto v1 = drawCall.transform * drawCall.mesh.vertices[v + 1].position;
+		auto v2 = drawCall.transform * drawCall.mesh.vertices[v + 2].position;
 
 		auto det012 = Det2D(v1 - v0, v2 - v0);
 		const bool ccw = det012 < 0.0;
-		if (ccw && cullMode == CullMode::CW || !ccw && cullMode == CullMode::CCW)
+		if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
 		{
 			continue; // Skip this triangle (back-face culling)
 		}
@@ -62,7 +56,7 @@ static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh, CullMode cullMo
 
 				if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
 				{
-					imageView.AssignPixel(x, y, mesh.color);
+					imageView.AssignPixel(x, y, drawCall.mesh.color);
 				}
 			}
 		}
@@ -120,7 +114,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 		imageView.Clear(Gadget::Vector4(0.1, 0.1, 0.1, 1.0));
 
-		Draw(imageView, triMesh, CullMode::CCW);
+		Draw(imageView, RS::DrawCall(triMesh));
 
 		imageView.Unlock();
 
