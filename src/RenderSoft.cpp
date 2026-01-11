@@ -18,9 +18,17 @@ static void Draw(RS::ImageView& imageView, const RS::Mesh& mesh)
 {
 	for (size_t v = 0; v + 2 < mesh.vertices.size(); v += 3)
 	{
-		const auto& v0 = mesh.vertices[v].position;
-		const auto& v1 = mesh.vertices[v + 1].position;
-		const auto& v2 = mesh.vertices[v + 2].position;
+		auto v0 = mesh.vertices[v].position;
+		auto v1 = mesh.vertices[v + 1].position;
+		auto v2 = mesh.vertices[v + 2].position;
+
+		auto det012 = Det2D(v1 - v0, v2 - v0);
+		const bool ccw = det012 < 0.0;
+		if (det012 < 0.0)
+		{
+			std::swap(v1, v2);
+			det012 = -det012;
+		}
 
 		std::array<Gadget::Vector2, 3> verts = {
 			Gadget::Vector2(v0.x, v0.y),
