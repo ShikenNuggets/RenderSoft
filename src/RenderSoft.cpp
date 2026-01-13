@@ -54,6 +54,8 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 		}
 
 		// Ignore any part of the bounds that are off-screen
+		bounds.min.x = std::max<double>(bounds.min.x, 0.0);
+		bounds.min.y = std::max<double>(bounds.min.y, 0.0);
 		bounds.max.x = std::min<double>(bounds.max.x, imageView.Width() - 1);
 		bounds.max.y = std::min<double>(bounds.max.y, imageView.Height() - 1);
 
@@ -90,7 +92,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	//auto window = new Gadget::Window(800, 600, Gadget::RenderAPI::None);
 	//delete window;
 
-	SDL_Window* window = SDL_CreateWindow("Software Rendering Surface", screenW, screenH, 0);
+	SDL_Window* window = SDL_CreateWindow("Software RasterMan", screenW, screenH, 0);
 	SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
 
 	RS::FrameCounter counter;
@@ -102,6 +104,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto triMesh = RS::Mesh();
 	triMesh.vertices.reserve(3);
+	//triMesh.vertices.emplace_back(Gadget::Vector3(450.0, 100.0, 0.0));
+	//triMesh.vertices.emplace_back(Gadget::Vector3(300.0, 350.0, 0.0));
+	//triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 350.0, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
@@ -134,6 +139,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 		imageView.Clear(Gadget::Vector4(0.1, 0.1, 0.1, 1.0));
 
+		//Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(-150.0, -50.0, 0.0))));
+		//Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(150.0, 175.0, 0.0))));
 		for (int i = 0; i < 64; i++)
 		{
 			Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(100.0 * (i % 8), 100.0 * (i / 8), 0.0))));
