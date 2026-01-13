@@ -23,6 +23,10 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 		auto v1 = drawCall.transform * drawCall.mesh.vertices[v + 1].position;
 		auto v2 = drawCall.transform * drawCall.mesh.vertices[v + 2].position;
 
+		auto c0 = drawCall.mesh.vertices[v].color;
+		auto c1 = drawCall.mesh.vertices[v + 1].color;
+		auto c2 = drawCall.mesh.vertices[v + 2].color;
+
 		auto det012 = Det2D(v1 - v0, v2 - v0);
 		const bool ccw = det012 < 0.0;
 		if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
@@ -65,7 +69,11 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 
 				if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
 				{
-					imageView.AssignPixel(x, y, drawCall.mesh.color);
+					const auto l0 = det12p / det012;
+					const auto l1 = det20p / det012;
+					const auto l2 = det01p / det012;
+
+					imageView.AssignPixel(x, y, l0 * c0 + l1 * c1 + l2 * c2);
 				}
 			}
 		}
@@ -97,7 +105,10 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
-	triMesh.color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
+
+	triMesh.vertices[0].color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
+	triMesh.vertices[1].color = Gadget::Vector4(0.0, 1.0, 0.0, 1.0);
+	triMesh.vertices[2].color = Gadget::Vector4(0.0, 0.0, 1.0, 1.0);
 
 	while (true)
 	{

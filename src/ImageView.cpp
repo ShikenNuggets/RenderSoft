@@ -37,7 +37,7 @@ void ImageView::Clear(const Gadget::Vector4& color)
 	}
 }
 
-void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color)
+void ImageView::AssignPixel(int32_t x, int32_t y, Uint32 color)
 {
 	if (surface == nullptr)
 	{
@@ -53,9 +53,14 @@ void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color)
 
 	const auto pixels = static_cast<uint32_t*>(surface->pixels);
 	const auto pitchInPixels = surface->pitch / sizeof(surface->pitch);
-	const auto finalColor = SDL_MapSurfaceRGB(surface, color.x * 255, color.y * 255, color.z * 255);
 
-	pixels[y * pitchInPixels + x] = finalColor;
+	pixels[y * pitchInPixels + x] = color;
+}
+
+void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color)
+{
+	const auto finalColor = SDL_MapSurfaceRGB(surface, color.x * 255, color.y * 255, color.z * 255);
+	AssignPixel(x, y, finalColor);
 }
 
 int ImageView::Width() const

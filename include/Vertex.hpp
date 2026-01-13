@@ -9,5 +9,6 @@ namespace RS
 		Vertex(const Gadget::Vector3 pos) : position(pos){}
 
 		Gadget::Vector3 position;
+		Gadget::Vector4 color;
 	};
 }
