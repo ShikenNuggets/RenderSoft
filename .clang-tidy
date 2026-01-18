@@ -25,6 +25,7 @@ Checks: '
   readability-*,
     -readability-identifier-length, # Sometimes your variables SHOULD be short,
     -readability-function-cognitive-complexity, # Not a fan of this metric,
+    -readability-magic-numbers, # TODO - Re-enable this check later when things are more stable
     -readability-math-missing-parentheses, # There are times when this is unclear but this warning is too aggressive for general use,
     -readability-redundant-inline-specifier, # Redundancy is OK,
     -readability-uppercase-literal-suffix, # Not sure why this check exists,

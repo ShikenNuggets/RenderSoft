@@ -2,8 +2,6 @@
 
 #include <vector>
 
-#include <GCore/Math/Math.hpp>
-
 #include "Vertex.hpp"
 
 namespace RS
