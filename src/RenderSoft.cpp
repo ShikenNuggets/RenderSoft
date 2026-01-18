@@ -24,9 +24,13 @@ static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const R
 		const auto i1 = drawCall.mesh.indices[i + 1];
 		const auto i2 = drawCall.mesh.indices[i + 2];
 
-		auto v0 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[i0].position);
-		auto v1 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[i1].position);
-		auto v2 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[i2].position);
+		const auto v0Pos = drawCall.mesh.vertices[i0].position;
+		const auto v1Pos = drawCall.mesh.vertices[i1].position;
+		const auto v2Pos = drawCall.mesh.vertices[i2].position;
+
+		auto v0 = viewport.NdcToViewport(drawCall.transform * Gadget::Vector4(v0Pos.x, v0Pos.y, v0Pos.z, 1.0));
+		auto v1 = viewport.NdcToViewport(drawCall.transform * Gadget::Vector4(v1Pos.x, v1Pos.y, v1Pos.z, 1.0));
+		auto v2 = viewport.NdcToViewport(drawCall.transform * Gadget::Vector4(v2Pos.x, v2Pos.y, v2Pos.z, 1.0));
 
 		auto c0 = drawCall.mesh.vertices[i0].color;
 		auto c1 = drawCall.mesh.vertices[i1].color;
@@ -232,13 +236,17 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	cubeMesh.vertices[22].color = Gadget::Vector4(0.f, 0.f, 1.f, 1.f);
 	cubeMesh.vertices[23].color = Gadget::Vector4(0.f, 0.f, 1.f, 1.f);
 
+	auto aspect = screenW * 1.0 / screenH;
+
 	auto transform = Gadget::Matrix4::Identity();
-	transform *= Gadget::Math::Scale(Gadget::Vector3(0.5, 0.5, 0.5));
+	//transform *= Gadget::Math::Scale(Gadget::Vector3(0.5, 0.5, 0.5));
+	transform *= Gadget::Math::Scale(Gadget::Vector3(0.0025, 0.0025, 0.0025));
+	transform *= Gadget::Math::Translate(Gadget::Vector3(0.0, 0.0, -100.0));
+	transform *= Gadget::Matrix4::Perspective(Gadget::Math::Pi / 3.0, aspect, 0.01, 100.0);
 
 	// Scale by aspect ratio
 	// TODO - This is a hack that we'll address with projection matrices later
-	auto aspect = screenH * (1.0 / screenW);
-	transform *= Gadget::Math::Scale(Gadget::Vector3(aspect, 1.0, 1.0));
+	//transform *= Gadget::Math::Scale(Gadget::Vector3(aspect, 1.0, 1.0));
 
 	while (true)
 	{
