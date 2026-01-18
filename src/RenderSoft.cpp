@@ -75,7 +75,9 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 					const auto l1 = det20p / det012;
 					const auto l2 = det01p / det012;
 
-					imageView.AssignPixel(x, y, l0 * c0 + l1 * c1 + l2 * c2);
+					auto colorVec = l0 * c0 + l1 * c1 + l2 * c2;
+
+					imageView.AssignPixel(x, y, Gadget::Color(colorVec.x, colorVec.y, colorVec.z));
 				}
 			}
 		}
@@ -104,12 +106,12 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto triMesh = RS::Mesh();
 	triMesh.vertices.reserve(3);
-	//triMesh.vertices.emplace_back(Gadget::Vector3(450.0, 100.0, 0.0));
-	//triMesh.vertices.emplace_back(Gadget::Vector3(300.0, 350.0, 0.0));
-	//triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 350.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(450.0, 100.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(300.0, 350.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 350.0, 0.0));
+	//triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
+	//triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
+	//triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
 
 	triMesh.vertices[0].color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
 	triMesh.vertices[1].color = Gadget::Vector4(0.0, 1.0, 0.0, 1.0);
@@ -137,14 +139,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 			1.0
 		));*/
 
-		imageView.Clear(Gadget::Vector4(0.1, 0.1, 0.1, 1.0));
+		imageView.Clear(Gadget::Color(0.1, 0.1, 0.1));
 
-		//Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(-150.0, -50.0, 0.0))));
-		//Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(150.0, 175.0, 0.0))));
-		for (int i = 0; i < 64; i++)
-		{
-			Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(100.0 * (i % 8), 100.0 * (i / 8), 0.0))));
-		}
+		Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(-150.0, -50.0, 0.0))));
+		Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(150.0, 175.0, 0.0))));
+		//for (int i = 0; i < 64; i++)
+		//{
+		//	Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(100.0 * (i % 8), 100.0 * (i / 8), 0.0))));
+		//}
 
 		imageView.Unlock();
 

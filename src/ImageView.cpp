@@ -22,11 +22,11 @@ void ImageView::Unlock()
 	SDL_UnlockSurface(surface);
 }
 
-void ImageView::Clear(const Gadget::Vector4& color)
+void ImageView::Clear(const Gadget::Color& color)
 {
 	const auto pixels = static_cast<uint32_t*>(surface->pixels);
 	const auto pitchInPixels = surface->pitch / sizeof(surface->pitch);
-	const auto finalColor = SDL_MapSurfaceRGB(surface, color.x * 255, color.y * 255, color.z * 255);
+	const auto finalColor = SDL_MapSurfaceRGB(surface, color.r * 255, color.g * 255, color.b * 255);
 
 	for (int y = 0; y < surface->h; y++)
 	{
@@ -57,38 +57,10 @@ void ImageView::AssignPixel(int32_t x, int32_t y, Uint32 color)
 	pixels[y * pitchInPixels + x] = color;
 }
 
-void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color)
+void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Color& color)
 {
-	Gadget::Vector4 sRGB;
-
-	if (color.x < 0.00313066844250063)
-	{
-		sRGB.x = color.x * 12.92;
-	}
-	else
-	{
-		sRGB.x = 1.055 * (std::pow(color.x, 1.0 / 2.4)) - 0.055;
-	}
-
-	if (color.y < 0.00313066844250063)
-	{
-		sRGB.y = color.y * 12.92;
-	}
-	else
-	{
-		sRGB.y = 1.055 * (std::pow(color.y, 1.0 / 2.4)) - 0.055;
-	}
-
-	if (color.z < 0.00313066844250063)
-	{
-		sRGB.z = color.z * 12.92;
-	}
-	else
-	{
-		sRGB.z = 1.055 * (std::pow(color.z, 1.0 / 2.4)) - 0.055;
-	}
-
-	const auto finalColor = SDL_MapSurfaceRGB(surface, sRGB.x * 255, sRGB.y * 255, sRGB.z * 255);
+	const Gadget::Color sRGB = color.ToSRGB();
+	const auto finalColor = SDL_MapSurfaceRGB(surface, sRGB.r * 255, sRGB.g * 255, sRGB.b * 255);
 	AssignPixel(x, y, finalColor);
 }
 

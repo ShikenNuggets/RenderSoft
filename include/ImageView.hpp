@@ -4,7 +4,7 @@
 
 #include <SDL3/SDL.h>
 
-#include <GCore/Math/Math.hpp>
+#include <GCore/Graphics/Color.hpp>
 
 namespace RS
 {
@@ -16,9 +16,9 @@ namespace RS
 		void Lock();
 		void Unlock();
 
-		void Clear(const Gadget::Vector4& color);
+		void Clear(const Gadget::Color& color);
 		void AssignPixel(int32_t x, int32_t y, Uint32 color);
-		void AssignPixel(int32_t x, int32_t y, const Gadget::Vector4& color);
+		void AssignPixel(int32_t x, int32_t y, const Gadget::Color& color);
 
 		[[nodiscard]] int Width() const;
 		[[nodiscard]] int Height() const;
