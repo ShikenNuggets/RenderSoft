@@ -18,15 +18,19 @@ static inline double Det2D(const Gadget::Vector2& v0, const Gadget::Vector2& v1)
 
 static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
 {
-	for (size_t v = 0; v + 2 < drawCall.mesh.vertices.size(); v += 3)
+	for (size_t i = 0; i + 2 < drawCall.mesh.indices.size(); i += 3)
 	{
-		auto v0 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[v].position);
-		auto v1 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[v + 1].position);
-		auto v2 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[v + 2].position);
+		const auto i0 = drawCall.mesh.indices[i];
+		const auto i1 = drawCall.mesh.indices[i + 1];
+		const auto i2 = drawCall.mesh.indices[i + 2];
 
-		auto c0 = drawCall.mesh.vertices[v].color;
-		auto c1 = drawCall.mesh.vertices[v + 1].color;
-		auto c2 = drawCall.mesh.vertices[v + 2].color;
+		auto v0 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[i0].position);
+		auto v1 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[i1].position);
+		auto v2 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[i2].position);
+
+		auto c0 = drawCall.mesh.vertices[i0].color;
+		auto c1 = drawCall.mesh.vertices[i1].color;
+		auto c2 = drawCall.mesh.vertices[i2].color;
 
 		auto det012 = Det2D(v1 - v0, v2 - v0);
 		const bool ccw = det012 < 0.0;
@@ -109,12 +113,21 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto triMesh = RS::Mesh();
 	triMesh.vertices.reserve(3);
-	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.5, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(-0.5, -0.5, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(-0.5, 0.5, 0.0));
 	triMesh.vertices.emplace_back(Gadget::Vector3(0.5, -0.5, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(0.5, 0.5, 0.0));
 	//triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
 	//triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
 	//triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
+
+	triMesh.indices.push_back(0);
+	triMesh.indices.push_back(1);
+	triMesh.indices.push_back(2);
+
+	triMesh.indices.push_back(2);
+	triMesh.indices.push_back(1);
+	triMesh.indices.push_back(3);
 
 	triMesh.vertices[0].color = Gadget::Vector4(1.0, 0.0, 0.0, 1.0);
 	triMesh.vertices[1].color = Gadget::Vector4(0.0, 1.0, 0.0, 1.0);

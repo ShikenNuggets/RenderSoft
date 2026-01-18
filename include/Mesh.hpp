@@ -12,6 +12,6 @@ namespace RS
 	{
 	public:
 		std::vector<Vertex> vertices;
-		Gadget::Vector4 color;
+		std::vector<size_t> indices;
 	};
 }
