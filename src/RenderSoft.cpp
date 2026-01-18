@@ -9,19 +9,20 @@
 #include "FrameCounter.hpp"
 #include "ImageView.hpp"
 #include "Mesh.hpp"
+#include "Viewport.hpp"
 
-static inline double Det2D(const Gadget::Vector3& v0, const Gadget::Vector3& v1)
+static inline double Det2D(const Gadget::Vector2& v0, const Gadget::Vector2& v1)
 {
 	return v0.x * v1.y - v0.y * v1.x;
 }
 
-static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
+static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
 {
 	for (size_t v = 0; v + 2 < drawCall.mesh.vertices.size(); v += 3)
 	{
-		auto v0 = drawCall.transform * drawCall.mesh.vertices[v].position;
-		auto v1 = drawCall.transform * drawCall.mesh.vertices[v + 1].position;
-		auto v2 = drawCall.transform * drawCall.mesh.vertices[v + 2].position;
+		auto v0 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[v].position);
+		auto v1 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[v + 1].position);
+		auto v2 = viewport.NdcToViewport(drawCall.transform * drawCall.mesh.vertices[v + 2].position);
 
 		auto c0 = drawCall.mesh.vertices[v].color;
 		auto c1 = drawCall.mesh.vertices[v + 1].color;
@@ -40,11 +41,11 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 			det012 = -det012;
 		}
 
-		std::array<Gadget::Vector2, 3> verts = {
-			Gadget::Vector2(v0.x, v0.y),
+		std::array<Gadget::Vector2, 3> verts = { v0, v1, v2 };
+		/*	Gadget::Vector2(v0.x, v0.y),
 			Gadget::Vector2(v1.x, v1.y),
 			Gadget::Vector2(v2.x, v2.y)
-		};
+		};*/
 
 		auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
 
@@ -63,7 +64,7 @@ static void Draw(RS::ImageView& imageView, const RS::DrawCall& drawCall)
 		{
 			for (int x = bounds.min.x; x < bounds.max.x; x++)
 			{
-				auto p = Gadget::Vector3(x + 0.5f, y + 0.5f, 0.0f);
+				auto p = Gadget::Vector2(x + 0.5f, y + 0.5f);
 
 				auto det01p = Det2D(v1 - v0, p - v0);
 				auto det12p = Det2D(v2 - v1, p - v1);
@@ -104,11 +105,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto imageView = RS::ImageView(screenSurface);
 
+	auto viewport = RS::Viewport(0, screenW, 0, screenH);
+
 	auto triMesh = RS::Mesh();
 	triMesh.vertices.reserve(3);
-	triMesh.vertices.emplace_back(Gadget::Vector3(450.0, 100.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(300.0, 350.0, 0.0));
-	triMesh.vertices.emplace_back(Gadget::Vector3(600.0, 350.0, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.5, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(-0.5, -0.5, 0.0));
+	triMesh.vertices.emplace_back(Gadget::Vector3(0.5, -0.5, 0.0));
 	//triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 0.0, 0.0));
 	//triMesh.vertices.emplace_back(Gadget::Vector3(0.0, 100.0, 0.0));
 	//triMesh.vertices.emplace_back(Gadget::Vector3(100.0, 0.0, 0.0));
@@ -141,8 +144,9 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 		imageView.Clear(Gadget::Color(0.1, 0.1, 0.1));
 
-		Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(-150.0, -50.0, 0.0))));
-		Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(150.0, 175.0, 0.0))));
+		Draw(viewport, imageView, RS::DrawCall(triMesh));
+		//Draw(viewport, imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(-150.0, -50.0, 0.0))));
+		//Draw(viewport, imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(150.0, 175.0, 0.0))));
 		//for (int i = 0; i < 64; i++)
 		//{
 		//	Draw(imageView, RS::DrawCall(triMesh, Gadget::Math::Translate(Gadget::Vector3(100.0 * (i % 8), 100.0 * (i / 8), 0.0))));
