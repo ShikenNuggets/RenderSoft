@@ -117,9 +117,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	auto aspect = screenW * 1.0 / screenH;
 
 	auto transform = Gadget::Matrix4::Identity();
-	//transform *= Gadget::Math::Scale(Gadget::Vector3(0.0025, 0.0025, 0.0025));
-	//transform *= Gadget::Math::Translate(Gadget::Vector3(0.0, 0.0, -100.0));
-	//transform *= Gadget::Matrix4::Perspective(Gadget::Math::Pi / 3.0, aspect, 0.01, 100.0);
 
 	auto pos = Gadget::Vector3(0.0, 0.0, 5.0);
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
@@ -137,8 +134,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		counter.AddFrameTime(std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime));
 
 		const auto deltaTime = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(curTime - prevTime).count()) / 1000.0;
-		//transform *= Gadget::Math::Rotate(deltaTime * 25.0, Gadget::Vector3(0.0, 1.0, 0.0));
-		//transform *= Gadget::Math::Rotate(deltaTime * 25.0 * 1.5, Gadget::Vector3(1.0, 0.0, 0.0));
 		rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, deltaTime * 25.0, 0.0);
 
 		const auto positionMatrix = Gadget::Math::Translate(pos);
