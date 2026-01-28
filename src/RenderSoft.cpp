@@ -121,7 +121,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	//transform *= Gadget::Math::Translate(Gadget::Vector3(0.0, 0.0, -100.0));
 	//transform *= Gadget::Matrix4::Perspective(Gadget::Math::Pi / 3.0, aspect, 0.01, 100.0);
 
-	auto pos = Gadget::Vector3(0.0, 0.0, -10.0);
+	auto pos = Gadget::Vector3(0.0, 0.0, 5.0);
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
 	auto scale = Gadget::Vector3(1.0, 1.0, 1.0);
 
