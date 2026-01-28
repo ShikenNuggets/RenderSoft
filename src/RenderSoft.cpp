@@ -25,9 +25,17 @@ static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const R
 		const auto i1 = drawCall.mesh.indices[i + 1];
 		const auto i2 = drawCall.mesh.indices[i + 2];
 
-		auto v0 = viewport.NdcToViewport(drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i0].position));
-		auto v1 = viewport.NdcToViewport(drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i1].position));
-		auto v2 = viewport.NdcToViewport(drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i2].position));
+		auto clip0 = drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i0].position);
+		auto clip1 = drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i1].position);
+		auto clip2 = drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i2].position);
+
+		clip0 /= clip0.w;
+		clip1 /= clip1.w;
+		clip2 /= clip2.w;
+
+		auto v0 = viewport.NdcToViewport(clip0);
+		auto v1 = viewport.NdcToViewport(clip1);
+		auto v2 = viewport.NdcToViewport(clip2);
 
 		auto c0 = drawCall.mesh.vertices[i0].color;
 		auto c1 = drawCall.mesh.vertices[i1].color;
