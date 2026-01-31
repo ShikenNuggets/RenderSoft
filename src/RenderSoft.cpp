@@ -38,13 +38,6 @@ static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4&
 		Gadget::Vector4::Dot(triangle[2].position, equation)
 	};
 
-	RS::Vertex v01{};
-	RS::Vertex v02{};
-	RS::Vertex v10{};
-	RS::Vertex v12{};
-	RS::Vertex v20{};
-	RS::Vertex v21{};
-
 	const uint8_t mask = (values[0] < 0.0 ? 1 : 0) | (values[1] < 0.0 ? 2 : 0) | (values[2] < 0.0 ? 4 : 0);
 	switch (mask)
 	{
@@ -57,50 +50,61 @@ static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4&
 			// Vertex 0 is outside allowed half-space
 			// Replace it with points on edges 01 and 02
 			// And re-triangulate
-			v01 = ClipIntersectEdge(triangle[0], triangle[1], values[0], values[1]);
-			v02 = ClipIntersectEdge(triangle[0], triangle[2], values[0], values[2]);
-			result.push_back({ v01, triangle[1], triangle[2]});
-			result.push_back({ v01, triangle[2], v02});
+			{
+				auto v01 = ClipIntersectEdge(triangle[0], triangle[1], values[0], values[1]);
+				auto v02 = ClipIntersectEdge(triangle[0], triangle[2], values[0], values[2]);
+				result.push_back({ v01, triangle[1], triangle[2] });
+				result.push_back({ v01, triangle[2], v02 });
+			}
 			break;
 		case 0b010:
 			// Vertex 1 is outside allowed half-space
 			// Replace it with points on edges 10 and 12
 			// And re-triangulate
-			v10 = ClipIntersectEdge(triangle[1], triangle[0], values[1], values[0]);
-			v12 = ClipIntersectEdge(triangle[1], triangle[2], values[1], values[2]);
-			result.push_back({ triangle[0], v10, triangle[2]});
-			result.push_back({ triangle[2], v10, v10});
+			{
+				auto v10 = ClipIntersectEdge(triangle[1], triangle[0], values[1], values[0]);
+				auto v12 = ClipIntersectEdge(triangle[1], triangle[2], values[1], values[2]);
+				result.push_back({ triangle[0], v10, triangle[2]});
+				result.push_back({ triangle[2], v10, v12});
+			}
 			break;
 		case 0b011:
 			// Vertices 0 and 1 are outside allowed half-space
 			// Replace them with points on edges 02 and 12
-			v02 = ClipIntersectEdge(triangle[0], triangle[2], values[0], values[2]);
-			v12 = ClipIntersectEdge(triangle[1], triangle[2], values[1], values[2]);
-			result.push_back({ v02, v12, triangle[2]});
+			{
+				auto v02 = ClipIntersectEdge(triangle[0], triangle[2], values[0], values[2]);
+				auto v12 = ClipIntersectEdge(triangle[1], triangle[2], values[1], values[2]);
+				result.push_back({ v02, v12, triangle[2] });
+			}
 			break;
 		case 0b100:
 			// Vertex 2 is outside allowed half-space
 			// Replace it with points on edges 20 and 21
 			// And re-triangulate
-			v20 = ClipIntersectEdge(triangle[2], triangle[0], values[2], values[0]);
-			v21 = ClipIntersectEdge(triangle[2], triangle[1], values[2], values[1]);
-			result.push_back({ triangle[0], triangle[1], v20});
-			result.push_back({ v20, triangle[1], v21});
+			{
+				auto v20 = ClipIntersectEdge(triangle[2], triangle[0], values[2], values[0]);
+				auto v21 = ClipIntersectEdge(triangle[2], triangle[1], values[2], values[1]);
+				result.push_back({ triangle[0], triangle[1], v20});
+				result.push_back({ v20, triangle[1], v21});
+			}
 			break;
 		case 0b101:
 			// Vertices 0 and 2 are outside allowed half-space
 			// Replace them with points on edges 01 and 21
-			v01 = ClipIntersectEdge(triangle[0], triangle[1], values[0], values[1]);
-			v21 = ClipIntersectEdge(triangle[2], triangle[1], values[2], values[1]);
-			result.push_back({ v01, triangle[1], v21 });
+			{
+				auto v01 = ClipIntersectEdge(triangle[0], triangle[1], values[0], values[1]);
+				auto v21 = ClipIntersectEdge(triangle[2], triangle[1], values[2], values[1]);
+				result.push_back({ v01, triangle[1], v21 });
+			}
 			break;
 		case 0b110:
 			// Vertices 1 and 2 are outside allowed half-space
 			// Replace them with points on edges 10 and 20
-			v10 = ClipIntersectEdge(triangle[1], triangle[0], values[1], values[0]);
-			v20 = ClipIntersectEdge(triangle[2], triangle[0], values[2], values[0]);
-			result.push_back({ triangle[0], v10, v20 });
-			break;
+			{
+				auto v10 = ClipIntersectEdge(triangle[1], triangle[0], values[1], values[0]);
+				auto v20 = ClipIntersectEdge(triangle[2], triangle[0], values[2], values[0]);
+				result.push_back({ triangle[0], v10, v20 });
+			}
 			break;
 		case 0b111:
 			// All vertices are outside allowed half-space
