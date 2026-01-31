@@ -8,10 +8,10 @@ namespace RS
 	{
 		auto rectMesh = RS::Mesh();
 		rectMesh.vertices.reserve(4);
-		rectMesh.vertices.emplace_back(Gadget::Vector3(-0.5, -0.5, 0.0));
-		rectMesh.vertices.emplace_back(Gadget::Vector3(-0.5, 0.5, 0.0));
-		rectMesh.vertices.emplace_back(Gadget::Vector3(0.5, -0.5, 0.0));
-		rectMesh.vertices.emplace_back(Gadget::Vector3(0.5, 0.5, 0.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(-0.5, -0.5, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(-0.5, 0.5, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(0.5, -0.5, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(0.5, 0.5, 0.0, 1.0));
 
 		rectMesh.indices.push_back(0);
 		rectMesh.indices.push_back(1);
@@ -32,50 +32,50 @@ namespace RS
 	RS::Mesh GetCubeMesh()
 	{
 		auto cubeMesh = RS::Mesh();
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.0, -1.0, -1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, 1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, -1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, 1.f, 1.f));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.0, -1.0, -1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, 1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, -1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, 1.f, 1.f, 1.0));
 
 		// +X face
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, -1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, 1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, -1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, 1.f, 1.f));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, -1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, 1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, -1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, 1.f, 1.f, 1.0));
 
 		// -Y face
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, -1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, -1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, -1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, -1.f, 1.f));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, -1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, -1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, -1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, -1.f, 1.f, 1.0));
 
 		// +Y face
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, 1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, 1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, 1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, 1.f, 1.f));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, 1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, 1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, 1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, 1.f, 1.f, 1.0));
 
 		// -Z face
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, -1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, -1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, 1.f, -1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, 1.f, -1.f));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, -1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, -1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, 1.f, -1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, 1.f, -1.f, 1.0));
 
 		// +Z face
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, -1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, -1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.f, 1.f, 1.f));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.f, 1.f, 1.f));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, -1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, -1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.f, 1.f, 1.f, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.f, 1.f, 1.f, 1.0));
 
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.0, -1.0, -1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.0, -1.0, 1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.0, 1.0, -1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(-1.0, 1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.0, -1.0, -1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.0, -1.0, 1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.0, 1.0, -1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(-1.0, 1.0, 1.0, 1.0));
 
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.0, -1.0, -1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.0, -1.0, 1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.0, 1.0, -1.0));
-		cubeMesh.vertices.push_back(Gadget::Vector3(1.0, 1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.0, -1.0, -1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.0, -1.0, 1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.0, 1.0, -1.0, 1.0));
+		cubeMesh.vertices.push_back(Gadget::Vector4(1.0, 1.0, 1.0, 1.0));
 
 		cubeMesh.indices.push_back(0); cubeMesh.indices.push_back(2); cubeMesh.indices.push_back(1);
 		cubeMesh.indices.push_back(1); cubeMesh.indices.push_back(2); cubeMesh.indices.push_back(3);

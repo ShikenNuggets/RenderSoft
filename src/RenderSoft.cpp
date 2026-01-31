@@ -17,6 +17,192 @@ static inline double Det2D(const Gadget::Vector2& v0, const Gadget::Vector2& v1)
 	return (v0.x * v1.y) - (v0.y * v1.x);
 }
 
+static inline RS::Vertex ClipIntersectEdge(const RS::Vertex& v0, const RS::Vertex& v1, double value0, double value1)
+{
+	const auto t = value0 / (value0 - value1);
+
+	return RS::Vertex(
+		(1.0 - t) * v0.position + t * v1.position,
+		(1.0f - static_cast<float>(t)) * v0.color + static_cast<float>(t) * v1.color
+	);
+}
+
+using Triangle = std::array<RS::Vertex, 3>;
+
+static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4& equation, std::vector<Triangle>& result)
+{
+	std::array<double, 3> values =
+	{
+		Gadget::Vector4::Dot(triangle[0].position, equation),
+		Gadget::Vector4::Dot(triangle[1].position, equation),
+		Gadget::Vector4::Dot(triangle[2].position, equation)
+	};
+
+	RS::Vertex v01{};
+	RS::Vertex v02{};
+	RS::Vertex v10{};
+	RS::Vertex v12{};
+	RS::Vertex v20{};
+	RS::Vertex v21{};
+
+	const uint8_t mask = (values[0] < 0.0 ? 1 : 0) | (values[1] < 0.0 ? 2 : 0) | (values[2] < 0.0 ? 4 : 0);
+	switch (mask)
+	{
+		case 0b000:
+			// All vertices are inside allowed half-space
+			// No clipping required, copy the triangle to output
+			result.push_back(triangle);
+			break;
+		case 0b001:
+			// Vertex 0 is outside allowed half-space
+			// Replace it with points on edges 01 and 02
+			// And re-triangulate
+			v01 = ClipIntersectEdge(triangle[0], triangle[1], values[0], values[1]);
+			v02 = ClipIntersectEdge(triangle[0], triangle[2], values[0], values[2]);
+			result.push_back({ v01, triangle[1], triangle[2]});
+			result.push_back({ v01, triangle[2], v02});
+			break;
+		case 0b010:
+			// Vertex 1 is outside allowed half-space
+			// Replace it with points on edges 10 and 12
+			// And re-triangulate
+			v10 = ClipIntersectEdge(triangle[1], triangle[0], values[1], values[0]);
+			v12 = ClipIntersectEdge(triangle[1], triangle[2], values[1], values[2]);
+			result.push_back({ triangle[0], v10, triangle[2]});
+			result.push_back({ triangle[2], v10, v10});
+			break;
+		case 0b011:
+			// Vertices 0 and 1 are outside allowed half-space
+			// Replace them with points on edges 02 and 12
+			v02 = ClipIntersectEdge(triangle[0], triangle[2], values[0], values[2]);
+			v12 = ClipIntersectEdge(triangle[1], triangle[2], values[1], values[2]);
+			result.push_back({ v02, v12, triangle[2]});
+			break;
+		case 0b100:
+			// Vertex 2 is outside allowed half-space
+			// Replace it with points on edges 20 and 21
+			// And re-triangulate
+			v20 = ClipIntersectEdge(triangle[2], triangle[0], values[2], values[0]);
+			v21 = ClipIntersectEdge(triangle[2], triangle[1], values[2], values[1]);
+			result.push_back({ triangle[0], triangle[1], v20});
+			result.push_back({ v20, triangle[1], v21});
+			break;
+		case 0b101:
+			// Vertices 0 and 2 are outside allowed half-space
+			// Replace them with points on edges 01 and 21
+			v01 = ClipIntersectEdge(triangle[0], triangle[1], values[0], values[1]);
+			v21 = ClipIntersectEdge(triangle[2], triangle[1], values[2], values[1]);
+			result.push_back({ v01, triangle[1], v21 });
+			break;
+		case 0b110:
+			// Vertices 1 and 2 are outside allowed half-space
+			// Replace them with points on edges 10 and 20
+			v10 = ClipIntersectEdge(triangle[1], triangle[0], values[1], values[0]);
+			v20 = ClipIntersectEdge(triangle[2], triangle[0], values[2], values[0]);
+			result.push_back({ triangle[0], v10, v20 });
+			break;
+			break;
+		case 0b111:
+			// All vertices are outside allowed half-space
+			// Clip the whole triangle, result is empty
+			break;
+	}
+}
+
+static inline std::vector<Triangle> ClipTriangle(Triangle inTriangle)
+{
+	static const std::array<Gadget::Vector4, 2> equations =
+	{
+		Gadget::Vector4(0.0, 0.0, 1.0, 1.0),
+		Gadget::Vector4(0.0, 0.0, -1.0, 1.0)
+	};
+
+	std::vector<Triangle> eq1Result;
+	eq1Result.reserve(12);
+
+	// Equation 1 - only one triangle to clip
+	ClipTriangle(inTriangle, equations[0], eq1Result);
+
+	// Equation 2 - possibly more than one triangle
+	std::vector<Triangle> eq2Result;
+	eq2Result.reserve(12);
+
+	for (const auto& tri : eq1Result)
+	{
+		ClipTriangle(tri, equations[1], eq2Result);
+	}
+
+	return eq2Result;
+}
+
+static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
+{
+	auto vert0 = tri[0].position;
+	auto vert1 = tri[1].position;
+	auto vert2 = tri[2].position;
+	
+	vert0 /= vert0.w;
+	vert1 /= vert1.w;
+	vert2 /= vert2.w;
+
+	auto v0 = viewport.NdcToViewport(vert0);
+	auto v1 = viewport.NdcToViewport(vert1);
+	auto v2 = viewport.NdcToViewport(vert2);
+
+	auto c0 = tri[0].color;
+	auto c1 = tri[1].color;
+	auto c2 = tri[2].color;
+
+	auto det012 = Det2D(v1 - v0, v2 - v0);
+	const bool ccw = det012 < 0.0;
+	if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
+	{
+		return; // Skip this triangle (back-face culling)
+	}
+
+	if (ccw)
+	{
+		std::swap(v1, v2);
+		det012 = -det012;
+	}
+
+	std::array<Gadget::Vector2, 3> verts = { v0, v1, v2 };
+	auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
+
+	if (bounds.min.x >= imageView.Width() || bounds.min.y >= imageView.Height() || bounds.max.x < 0.0 || bounds.max.y < 0.0)
+	{
+		return; // Early out, triangle bounds are fully off-screen
+	}
+
+	// Ignore any part of the bounds that are off-screen
+	bounds.min.x = std::max<double>(bounds.min.x, viewport.GetXMin());
+	bounds.min.y = std::max<double>(bounds.min.y, viewport.GetYMin());
+	bounds.max.x = std::min<double>(std::min<double>(bounds.max.x, imageView.Width() - 1), viewport.GetXMax());
+	bounds.max.y = std::min<double>(std::min<double>(bounds.max.y, imageView.Height() - 1), viewport.GetYMax());
+
+	for (int y = bounds.min.y; y < bounds.max.y; y++)
+	{
+		for (int x = bounds.min.x; x < bounds.max.x; x++)
+		{
+			auto p = Gadget::Vector2(static_cast<double>(x) + 0.5, static_cast<double>(y) + 0.5);
+
+			auto det01p = Det2D(v1 - v0, p - v0);
+			auto det12p = Det2D(v2 - v1, p - v1);
+			auto det20p = Det2D(v0 - v2, p - v2);
+
+			if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
+			{
+				const auto l0 = det12p / det012;
+				const auto l1 = det20p / det012;
+				const auto l2 = det01p / det012;
+
+				auto finalColor = (c0 * l0) + (c1 * l1) + (c2 * l2);
+				imageView.AssignPixel(x, y, finalColor);
+			}
+		}
+	}
+}
+
 static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
 {
 	for (size_t i = 0; i + 2 < drawCall.mesh.indices.size(); i += 3)
@@ -25,69 +211,21 @@ static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const R
 		const auto i1 = drawCall.mesh.indices[i + 1];
 		const auto i2 = drawCall.mesh.indices[i + 2];
 
-		auto clip0 = drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i0].position);
-		auto clip1 = drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i1].position);
-		auto clip2 = drawCall.transform * Gadget::Math::ToVector4(drawCall.mesh.vertices[i2].position);
+		auto clip0 = drawCall.transform * drawCall.mesh.vertices[i0].position;
+		auto clip1 = drawCall.transform * drawCall.mesh.vertices[i1].position;
+		auto clip2 = drawCall.transform * drawCall.mesh.vertices[i2].position;
 
-		clip0 /= clip0.w;
-		clip1 /= clip1.w;
-		clip2 /= clip2.w;
+		const auto clipVert0 = RS::Vertex(clip0, drawCall.mesh.vertices[i0].color);
+		const auto clipVert1 = RS::Vertex(clip1, drawCall.mesh.vertices[i1].color);
+		const auto clipVert2 = RS::Vertex(clip2, drawCall.mesh.vertices[i2].color);
 
-		auto v0 = viewport.NdcToViewport(clip0);
-		auto v1 = viewport.NdcToViewport(clip1);
-		auto v2 = viewport.NdcToViewport(clip2);
+		// To disable view clipping, just rasterize the triangle directly
+		//Rasterize({ clipVert0, clipVert1, clipVert2 }, viewport, imageView, drawCall);
 
-		auto c0 = drawCall.mesh.vertices[i0].color;
-		auto c1 = drawCall.mesh.vertices[i1].color;
-		auto c2 = drawCall.mesh.vertices[i2].color;
-
-		auto det012 = Det2D(v1 - v0, v2 - v0);
-		const bool ccw = det012 < 0.0;
-		if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
+		const auto clippedTris = ClipTriangle({ clipVert0, clipVert1, clipVert2 });
+		for (const auto& tri : clippedTris)
 		{
-			continue; // Skip this triangle (back-face culling)
-		}
-
-		if (ccw)
-		{
-			std::swap(v1, v2);
-			det012 = -det012;
-		}
-
-		std::array<Gadget::Vector2, 3> verts = { v0, v1, v2 };
-		auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
-
-		if (bounds.min.x >= imageView.Width() || bounds.min.y >= imageView.Height() || bounds.max.x < 0.0 || bounds.max.y < 0.0)
-		{
-			continue; // Early out, triangle bounds are fully off-screen
-		}
-
-		// Ignore any part of the bounds that are off-screen
-		bounds.min.x = std::max<double>(bounds.min.x, viewport.GetXMin());
-		bounds.min.y = std::max<double>(bounds.min.y, viewport.GetYMin());
-		bounds.max.x = std::min<double>(std::min<double>(bounds.max.x, imageView.Width() - 1), viewport.GetXMax());
-		bounds.max.y = std::min<double>(std::min<double>(bounds.max.y, imageView.Height() - 1), viewport.GetYMax());
-
-		for (int y = bounds.min.y; y < bounds.max.y; y++)
-		{
-			for (int x = bounds.min.x; x < bounds.max.x; x++)
-			{
-				auto p = Gadget::Vector2(static_cast<double>(x) + 0.5, static_cast<double>(y) + 0.5);
-
-				auto det01p = Det2D(v1 - v0, p - v0);
-				auto det12p = Det2D(v2 - v1, p - v1);
-				auto det20p = Det2D(v0 - v2, p - v2);
-
-				if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
-				{
-					const auto l0 = det12p / det012;
-					const auto l1 = det20p / det012;
-					const auto l2 = det01p / det012;
-
-					auto finalColor = (c0 * l0) + (c1 * l1) + (c2 * l2);
-					imageView.AssignPixel(x, y, finalColor);
-				}
-			}
+			Rasterize(tri, viewport, imageView, drawCall);
 		}
 	}
 }
@@ -118,7 +256,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto transform = Gadget::Matrix4::Identity();
 
-	auto pos = Gadget::Vector3(0.0, 0.0, 5.0);
+	auto pos = Gadget::Vector3(0.0, 0.0, -5.0);
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
 	auto scale = Gadget::Vector3(1.0, 1.0, 1.0);
 
