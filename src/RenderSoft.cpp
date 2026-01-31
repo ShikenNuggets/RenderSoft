@@ -193,11 +193,28 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Ima
 
 			if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
 			{
-				const auto l0 = det12p / det012;
-				const auto l1 = det20p / det012;
-				const auto l2 = det01p / det012;
+				auto l0 = det12p / det012 / vert0.position.w;
+				auto l1 = det20p / det012 / vert1.position.w;
+				auto l2 = det01p / det012 / vert2.position.w;
+
+				const auto lSum = l0 + l1 + l2;
+				l0 /= lSum;
+				l1 /= lSum;
+				l2 /= lSum;
 
 				auto finalColor = (c0 * l0) + (c1 * l1) + (c2 * l2);
+				if (drawCall.debugCheckerboard)
+				{
+					if (static_cast<int>(std::floor(finalColor.r * 8.0) + std::floor(finalColor.g * 8.0)) % 2 == 0)
+					{
+						finalColor = { 0, 0, 0, 255 };
+					}
+					else
+					{
+						finalColor = { 255, 255, 255, 255 };
+					}
+				}
+
 				imageView.AssignPixel(x, y, finalColor);
 			}
 		}
@@ -250,14 +267,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto viewport = RS::Viewport(0, screenW, 0, screenH);
 
-	//auto rectMesh = RS::GetRectMesh();
-	auto cubeMesh = RS::GetCubeMesh();
+	auto rectMesh = RS::GetRectMesh();
+	//auto cubeMesh = RS::GetCubeMesh();
 
 	auto aspect = screenW * 1.0 / screenH;
 
 	auto transform = Gadget::Matrix4::Identity();
 
-	auto pos = Gadget::Vector3(0.0, 0.0, -5.0);
+	auto pos = Gadget::Vector3(0.0, 0.0, -2.0);
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
 	auto scale = Gadget::Vector3(1.0, 1.0, 1.0);
 
@@ -273,7 +290,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		counter.AddFrameTime(std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime));
 
 		const auto deltaTime = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(curTime - prevTime).count()) / 1000.0;
-		rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, deltaTime * 25.0, 0.0);
+		//rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, deltaTime * 25.0, 0.0);
+		rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, 0.0, 0.0);
 
 		const auto positionMatrix = Gadget::Math::Translate(pos);
 		const auto rotationMatrix = Gadget::Math::ToMatrix4(Gadget::Math::ToQuaternion(rot));
@@ -285,7 +303,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		imageView.Lock();
 		imageView.Clear(Gadget::Color(0.1, 0.1, 0.1));
 
-		Draw(viewport, imageView, RS::DrawCall(cubeMesh, transform));
+		Draw(viewport, imageView, RS::DrawCall(rectMesh, transform));
 
 		imageView.Unlock();
 

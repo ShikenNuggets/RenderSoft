@@ -8,10 +8,10 @@ namespace RS
 	{
 		auto rectMesh = RS::Mesh();
 		rectMesh.vertices.reserve(4);
-		rectMesh.vertices.emplace_back(Gadget::Vector4(-0.5, -0.5, 0.0, 1.0));
-		rectMesh.vertices.emplace_back(Gadget::Vector4(-0.5, 0.5, 0.0, 1.0));
-		rectMesh.vertices.emplace_back(Gadget::Vector4(0.5, -0.5, 0.0, 1.0));
-		rectMesh.vertices.emplace_back(Gadget::Vector4(0.5, 0.5, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(-1.0, -1.0, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(1.0, -1.0, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(-1.0, 1.0, 0.0, 1.0));
+		rectMesh.vertices.emplace_back(Gadget::Vector4(1.0, 1.0, 0.0, 1.0));
 
 		rectMesh.indices.push_back(0);
 		rectMesh.indices.push_back(1);
@@ -21,10 +21,10 @@ namespace RS
 		rectMesh.indices.push_back(1);
 		rectMesh.indices.push_back(3);
 
-		rectMesh.vertices[0].color = Gadget::Color(1.0, 0.0, 0.0, 1.0);
-		rectMesh.vertices[1].color = Gadget::Color(0.0, 1.0, 0.0, 1.0);
-		rectMesh.vertices[2].color = Gadget::Color(0.0, 0.0, 1.0, 1.0);
-		rectMesh.vertices[3].color = Gadget::Color(0.0, 0.0, 0.0, 1.0);
+		rectMesh.vertices[0].color = Gadget::Color(0.0, 0.0, 0.0, 1.0);
+		rectMesh.vertices[1].color = Gadget::Color(1.0, 0.0, 0.0, 1.0);
+		rectMesh.vertices[2].color = Gadget::Color(0.0, 1.0, 0.0, 1.0);
+		rectMesh.vertices[3].color = Gadget::Color(1.0, 1.0, 0.0, 1.0);
 
 		return rectMesh;
 	}

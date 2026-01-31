@@ -18,10 +18,11 @@ namespace RS
 	class DrawCall
 	{
 	public:
-		DrawCall(RS::Mesh& mesh_, Gadget::Matrix4 transform_ = Gadget::Matrix4::Identity()) : mesh(mesh_), mode(CullMode::CCW), transform(transform_){}
+		DrawCall(RS::Mesh& mesh_, Gadget::Matrix4 transform_ = Gadget::Matrix4::Identity()) : mesh(mesh_), mode(CullMode::CCW), transform(transform_), debugCheckerboard(false){}
 
 		RS::Mesh& mesh;
 		CullMode mode;
 		Gadget::Matrix4 transform;
+		bool debugCheckerboard;
 	};
 }
