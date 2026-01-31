@@ -141,34 +141,31 @@ static inline std::vector<Triangle> ClipTriangle(Triangle inTriangle)
 
 static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
 {
-	auto vert0 = tri[0].position;
-	auto vert1 = tri[1].position;
-	auto vert2 = tri[2].position;
-	
-	vert0 /= vert0.w;
-	vert1 /= vert1.w;
-	vert2 /= vert2.w;
+	auto vert0 = tri[0];
+	auto vert1 = tri[1];
+	auto vert2 = tri[2];
 
-	auto v0 = viewport.NdcToViewport(vert0);
-	auto v1 = viewport.NdcToViewport(vert1);
-	auto v2 = viewport.NdcToViewport(vert2);
-
-	auto c0 = tri[0].color;
-	auto c1 = tri[1].color;
-	auto c2 = tri[2].color;
+	auto v0 = viewport.NdcToViewport(vert0.position / vert0.position.w);
+	auto v1 = viewport.NdcToViewport(vert1.position / vert1.position.w);
+	auto v2 = viewport.NdcToViewport(vert2.position / vert2.position.w);
 
 	auto det012 = Det2D(v1 - v0, v2 - v0);
 	const bool ccw = det012 < 0.0;
-	if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
+	if (!ccw && drawCall.mode == RS::CullMode::CW || ccw && drawCall.mode == RS::CullMode::CCW)
 	{
 		return; // Skip this triangle (back-face culling)
 	}
 
 	if (ccw)
 	{
+		std::swap(vert1, vert2);
 		std::swap(v1, v2);
 		det012 = -det012;
 	}
+
+	auto c0 = vert0.color;
+	auto c1 = vert1.color;
+	auto c2 = vert2.color;
 
 	std::array<Gadget::Vector2, 3> verts = { v0, v1, v2 };
 	auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
