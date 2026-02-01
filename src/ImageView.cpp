@@ -70,8 +70,7 @@ void ImageView::CopyFrameBuffer(const RS::FrameBuffer& buffer)
 	{
 		for (uint16_t y = 0; y < buffer.Height(); y++)
 		{
-			auto idx = buffer.colorBuffer.GetPixelIndex(x, y);
-			AssignPixel(x, y, buffer.colorBuffer.GetPixels()[idx]);
+			AssignPixel(x, y, buffer.color.GetPixel(x, y));
 		}
 	}
 }

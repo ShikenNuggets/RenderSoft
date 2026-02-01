@@ -1,14 +1,8 @@
 #pragma once
 
-#include <array>
 #include <cstdint>
 #include <print>
-#include <type_traits>
 #include <vector>
-
-#include <SDL3/SDL.h>
-
-#include <GCore/Graphics/Color.hpp>
 
 namespace RS
 {
@@ -29,7 +23,12 @@ namespace RS
 			}
 		}
 
-		void AssignPixel(uint16_t x, uint16_t y, const Pixel& color)
+		const Pixel& GetPixel(uint16_t x, uint16_t y) const
+		{
+			return pixels[GetPixelIndex(x, y)];
+		}
+
+		void SetPixel(uint16_t x, uint16_t y, const Pixel& color)
 		{
 			if (x < 0 || y < 0 || x >= width || y >= height)
 			{

@@ -140,15 +140,44 @@ static inline std::vector<Triangle> ClipTriangle(Triangle inTriangle)
 	return eq2Result;
 }
 
+static inline bool DepthTest(RS::DepthTestMode mode, uint32_t value, uint32_t reference)
+{
+	switch (mode)
+	{
+		case RS::DepthTestMode::Always:
+			return true;
+		case RS::DepthTestMode::Never:
+			return false;
+		case RS::DepthTestMode::Less:
+			return value < reference;
+		case RS::DepthTestMode::LessEqual:
+			return value <= reference;
+		case RS::DepthTestMode::Greater:
+			return value > reference;
+		case RS::DepthTestMode::GreaterEqual:
+			return value >= reference;
+		case RS::DepthTestMode::Equal:
+			return value == reference;
+		case RS::DepthTestMode::NotEqual:
+			return value != reference;
+	}
+
+	return true;
+}
+
 static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, const RS::DrawCall& drawCall)
 {
 	auto vert0 = tri[0];
 	auto vert1 = tri[1];
 	auto vert2 = tri[2];
 
-	auto v0 = viewport.NdcToViewport(vert0.position / vert0.position.w);
-	auto v1 = viewport.NdcToViewport(vert1.position / vert1.position.w);
-	auto v2 = viewport.NdcToViewport(vert2.position / vert2.position.w);
+	const auto projVert0 = vert0.position / vert0.position.w;
+	const auto projVert1 = vert1.position / vert1.position.w;
+	const auto projVert2 = vert2.position / vert2.position.w;
+
+	auto v0 = viewport.NdcToViewport(projVert0);
+	auto v1 = viewport.NdcToViewport(projVert1);
+	auto v2 = viewport.NdcToViewport(projVert2);
 
 	auto det012 = Det2D(v1 - v0, v2 - v0);
 	const bool ccw = det012 < 0.0;
@@ -216,7 +245,20 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 					}
 				}
 
-				frameBuffer.colorBuffer.AssignPixel(x, y, finalColor);
+				const auto z = (l0 * projVert0.z) + (l1 * projVert1.z) + (l2 * projVert2.z);
+				const uint32_t depth = (0.5 + 0.5 * z) * std::numeric_limits<uint32_t>::max();
+
+				if (!DepthTest(drawCall.depthMode, depth, frameBuffer.depth.GetPixel(x, y)))
+				{
+					continue;
+				}
+
+				if (drawCall.writeDepth)
+				{
+					frameBuffer.depth.SetPixel(x, y, depth);
+				}
+
+				frameBuffer.color.SetPixel(x, y, finalColor);
 			}
 		}
 	}
@@ -302,14 +344,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		transform = (positionMatrix * (rotationMatrix * scaleMatrix));
 		transform = Gadget::Matrix4::Perspective(90.0, aspect, 0.01, 1000.0) * transform;
 
-		imageView.Lock();
-		imageView.Clear(Gadget::Color(0.1, 0.1, 0.1));
-		frameBuffer.colorBuffer.Clear(Gadget::Color(0.01, 0.01, 0.01));
-		frameBuffer.depthBuffer.Clear(0);
-
+		frameBuffer.Clear(Gadget::Color(0.01, 0.01, 0.01));
 		Draw(viewport, frameBuffer, RS::DrawCall(cubeMesh, transform));
-		imageView.CopyFrameBuffer(frameBuffer);
 
+		imageView.Lock();
+		imageView.CopyFrameBuffer(frameBuffer);
 		imageView.Unlock();
 
 		SDL_UpdateWindowSurface(window);
