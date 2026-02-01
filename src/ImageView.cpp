@@ -64,6 +64,18 @@ void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Color& color)
 	AssignPixel(x, y, finalColor);
 }
 
+void ImageView::CopyFrameBuffer(const RS::FrameBuffer& buffer)
+{
+	for (uint16_t x = 0; x < buffer.Width(); x++)
+	{
+		for (uint16_t y = 0; y < buffer.Height(); y++)
+		{
+			auto idx = buffer.colorBuffer.GetPixelIndex(x, y);
+			AssignPixel(x, y, buffer.colorBuffer.GetPixels()[idx]);
+		}
+	}
+}
+
 int ImageView::Width() const
 {
 	if (surface == nullptr)

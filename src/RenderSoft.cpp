@@ -6,6 +6,7 @@
 #include <GCore/Window.hpp>
 
 #include "DrawCall.hpp"
+#include "FrameBuffer.hpp"
 #include "FrameCounter.hpp"
 #include "ImageView.hpp"
 #include "Mesh.hpp"
@@ -139,7 +140,7 @@ static inline std::vector<Triangle> ClipTriangle(Triangle inTriangle)
 	return eq2Result;
 }
 
-static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
+static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, const RS::DrawCall& drawCall)
 {
 	auto vert0 = tri[0];
 	auto vert1 = tri[1];
@@ -151,7 +152,7 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Ima
 
 	auto det012 = Det2D(v1 - v0, v2 - v0);
 	const bool ccw = det012 < 0.0;
-	if (!ccw && drawCall.mode == RS::CullMode::CW || ccw && drawCall.mode == RS::CullMode::CCW)
+	if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
 	{
 		return; // Skip this triangle (back-face culling)
 	}
@@ -170,7 +171,7 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Ima
 	std::array<Gadget::Vector2, 3> verts = { v0, v1, v2 };
 	auto bounds = Gadget::Math::CalculateBounds<double>(verts); // TODO - span was a nice idea, but the dev UX here kinda blows
 
-	if (bounds.min.x >= imageView.Width() || bounds.min.y >= imageView.Height() || bounds.max.x < 0.0 || bounds.max.y < 0.0)
+	if (bounds.min.x >= frameBuffer.Width() || bounds.min.y >= frameBuffer.Height() || bounds.max.x < 0.0 || bounds.max.y < 0.0)
 	{
 		return; // Early out, triangle bounds are fully off-screen
 	}
@@ -178,8 +179,8 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Ima
 	// Ignore any part of the bounds that are off-screen
 	bounds.min.x = std::max<double>(bounds.min.x, viewport.GetXMin());
 	bounds.min.y = std::max<double>(bounds.min.y, viewport.GetYMin());
-	bounds.max.x = std::min<double>(std::min<double>(bounds.max.x, imageView.Width() - 1), viewport.GetXMax());
-	bounds.max.y = std::min<double>(std::min<double>(bounds.max.y, imageView.Height() - 1), viewport.GetYMax());
+	bounds.max.x = std::min<double>(std::min<double>(bounds.max.x, frameBuffer.Width() - 1), viewport.GetXMax());
+	bounds.max.y = std::min<double>(std::min<double>(bounds.max.y, frameBuffer.Height() - 1), viewport.GetYMax());
 
 	for (int y = bounds.min.y; y < bounds.max.y; y++)
 	{
@@ -215,13 +216,13 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Ima
 					}
 				}
 
-				imageView.AssignPixel(x, y, finalColor);
+				frameBuffer.colorBuffer.AssignPixel(x, y, finalColor);
 			}
 		}
 	}
 }
 
-static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const RS::DrawCall& drawCall)
+static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, const RS::DrawCall& drawCall)
 {
 	for (size_t i = 0; i + 2 < drawCall.mesh.indices.size(); i += 3)
 	{
@@ -238,12 +239,12 @@ static void Draw(const RS::Viewport& viewport, RS::ImageView& imageView, const R
 		const auto clipVert2 = RS::Vertex(clip2, drawCall.mesh.vertices[i2].color);
 
 		// To disable view clipping, just rasterize the triangle directly
-		//Rasterize({ clipVert0, clipVert1, clipVert2 }, viewport, imageView, drawCall);
+		//Rasterize({ clipVert0, clipVert1, clipVert2 }, viewport, frameBuffer, drawCall);
 
 		const auto clippedTris = ClipTriangle({ clipVert0, clipVert1, clipVert2 });
 		for (const auto& tri : clippedTris)
 		{
-			Rasterize(tri, viewport, imageView, drawCall);
+			Rasterize(tri, viewport, frameBuffer, drawCall);
 		}
 	}
 }
@@ -264,17 +265,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	auto curTime = prevTime;
 
 	auto imageView = RS::ImageView(screenSurface);
+	auto frameBuffer = RS::FrameBuffer(screenW, screenH);
 
 	auto viewport = RS::Viewport(0, screenW, 0, screenH);
 
 	auto rectMesh = RS::GetRectMesh();
-	//auto cubeMesh = RS::GetCubeMesh();
+	auto cubeMesh = RS::GetCubeMesh();
 
 	auto aspect = screenW * 1.0 / screenH;
 
 	auto transform = Gadget::Matrix4::Identity();
 
-	auto pos = Gadget::Vector3(0.0, 0.0, -2.0);
+	auto pos = Gadget::Vector3(0.0, 0.0, -5.0);
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
 	auto scale = Gadget::Vector3(1.0, 1.0, 1.0);
 
@@ -290,8 +292,8 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		counter.AddFrameTime(std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime));
 
 		const auto deltaTime = static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(curTime - prevTime).count()) / 1000.0;
-		//rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, deltaTime * 25.0, 0.0);
-		rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, 0.0, 0.0);
+		rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, deltaTime * 25.0, 0.0);
+		//rot = rot + Gadget::Euler(deltaTime * 25.0 * 1.5, 0.0, 0.0);
 
 		const auto positionMatrix = Gadget::Math::Translate(pos);
 		const auto rotationMatrix = Gadget::Math::ToMatrix4(Gadget::Math::ToQuaternion(rot));
@@ -302,8 +304,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 		imageView.Lock();
 		imageView.Clear(Gadget::Color(0.1, 0.1, 0.1));
+		frameBuffer.colorBuffer.Clear(Gadget::Color(0.01, 0.01, 0.01));
+		frameBuffer.depthBuffer.Clear(0);
 
-		Draw(viewport, imageView, RS::DrawCall(rectMesh, transform));
+		Draw(viewport, frameBuffer, RS::DrawCall(cubeMesh, transform));
+		imageView.CopyFrameBuffer(frameBuffer);
 
 		imageView.Unlock();
 
