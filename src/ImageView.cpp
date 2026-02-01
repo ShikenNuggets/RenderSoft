@@ -59,6 +59,11 @@ void ImageView::AssignPixel(int32_t x, int32_t y, Uint32 color)
 
 void ImageView::AssignPixel(int32_t x, int32_t y, const Gadget::Color& color)
 {
+	if (color.a < 0.001f)
+	{
+		return;
+	}
+
 	const Gadget::Color sRGB = color.ToSRGB();
 	const auto finalColor = SDL_MapSurfaceRGB(surface, sRGB.r * 255, sRGB.g * 255, sRGB.b * 255);
 	AssignPixel(x, y, finalColor);

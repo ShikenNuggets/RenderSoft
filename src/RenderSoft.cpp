@@ -344,10 +344,11 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		transform = (positionMatrix * (rotationMatrix * scaleMatrix));
 		transform = Gadget::Matrix4::Perspective(90.0, aspect, 0.01, 1000.0) * transform;
 
-		frameBuffer.Clear(Gadget::Color(0.01, 0.01, 0.01));
+		frameBuffer.Clear();
 		Draw(viewport, frameBuffer, RS::DrawCall(cubeMesh, transform));
 
 		imageView.Lock();
+		imageView.Clear(Gadget::Color(0.1f, 0.1f, 0.1f));
 		imageView.CopyFrameBuffer(frameBuffer);
 		imageView.Unlock();
 

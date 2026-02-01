@@ -18,7 +18,7 @@ namespace RS
 		RenderTarget<Gadget::Color> color;
 		RenderTarget<DepthT> depth;
 
-		void Clear(const Gadget::Color& color_ = Gadget::Color(0.0, 0.0, 0.0), DepthT depth_ = std::numeric_limits<DepthT>::max())
+		void Clear(const Gadget::Color& color_ = Gadget::Color(0.0, 0.0, 0.0, 0.0), DepthT depth_ = std::numeric_limits<DepthT>::max())
 		{
 			color.Clear(color_);
 			depth.Clear(depth_);
