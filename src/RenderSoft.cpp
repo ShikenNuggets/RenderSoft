@@ -224,18 +224,12 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 
 			if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
 			{
-				auto l0 = det12p / det012 / vert0.position.w;
-				auto l1 = det20p / det012 / vert1.position.w;
-				auto l2 = det01p / det012 / vert2.position.w;
-
-				const auto lSum = l0 + l1 + l2;
-				l0 /= lSum;
-				l1 /= lSum;
-				l2 /= lSum;
+				auto l0 = det12p / det012;
+				auto l1 = det20p / det012;
+				auto l2 = det01p / det012;
 
 				const auto z = (l0 * projVert0.z) + (l1 * projVert1.z) + (l2 * projVert2.z);
 				const uint32_t depth = (0.5 + 0.5 * z) * std::numeric_limits<uint32_t>::max();
-
 				if (!DepthTest(drawCall.depthMode, depth, frameBuffer.depth.GetPixel(x, y)))
 				{
 					continue;
@@ -245,6 +239,14 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 				{
 					frameBuffer.depth.SetPixel(x, y, depth);
 				}
+
+				l0 /= det012;
+				l1 /= det012;
+				l2 /= det012;
+				const auto lSum = l0 + l1 + l2;
+				l0 /= lSum;
+				l1 /= lSum;
+				l2 /= lSum;
 
 				auto finalColor = (c0 * l0) + (c1 * l1) + (c2 * l2);
 				if (drawCall.debugCheckerboard)
