@@ -180,6 +180,11 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 	auto v2 = viewport.NdcToViewport(projVert2);
 
 	auto det012 = Det2D(v1 - v0, v2 - v0);
+	if (Gadget::Math::IsNearZero(det012))
+	{
+		return; // Early out, triangle is very very small
+	}
+
 	const bool ccw = det012 < 0.0;
 	if (ccw && drawCall.mode == RS::CullMode::CW || !ccw && drawCall.mode == RS::CullMode::CCW)
 	{
@@ -218,11 +223,11 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 		{
 			auto p = Gadget::Vector2(static_cast<double>(x) + 0.5, static_cast<double>(y) + 0.5);
 
-			auto det01p = Det2D(v1 - v0, p - v0);
-			auto det12p = Det2D(v2 - v1, p - v1);
-			auto det20p = Det2D(v0 - v2, p - v2);
+			const auto det01p = Det2D(v1 - v0, p - v0);
+			const auto det12p = Det2D(v2 - v1, p - v1);
+			const auto det20p = Det2D(v0 - v2, p - v2);
 
-			if (det01p >= 0.0f && det12p >= 0.0f && det20p >= 0.0f)
+			if (det01p >= 0.0 && det12p >= 0.0 && det20p >= 0.0)
 			{
 				auto l0 = det12p / det012;
 				auto l1 = det20p / det012;

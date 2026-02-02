@@ -30,7 +30,7 @@ namespace RS
 	class DrawCall
 	{
 	public:
-		DrawCall(RS::Mesh& mesh_, Gadget::Matrix4 transform_ = Gadget::Matrix4::Identity()) : mesh(mesh_), mode(CullMode::None), writeDepth(true), depthMode(DepthTestMode::Less), transform(transform_), debugCheckerboard(false){}
+		DrawCall(RS::Mesh& mesh_, Gadget::Matrix4 transform_ = Gadget::Matrix4::Identity()) : mesh(mesh_), mode(CullMode::CCW), writeDepth(true), depthMode(DepthTestMode::Less), transform(transform_), debugCheckerboard(false){}
 
 		RS::Mesh& mesh;
 		CullMode mode;
