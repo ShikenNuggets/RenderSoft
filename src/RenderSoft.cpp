@@ -171,9 +171,9 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 	auto vert1 = tri[1];
 	auto vert2 = tri[2];
 
-	const auto projVert0 = vert0.position / vert0.position.w;
-	const auto projVert1 = vert1.position / vert1.position.w;
-	const auto projVert2 = vert2.position / vert2.position.w;
+	auto projVert0 = vert0.position / vert0.position.w;
+	auto projVert1 = vert1.position / vert1.position.w;
+	auto projVert2 = vert2.position / vert2.position.w;
 
 	auto v0 = viewport.NdcToViewport(projVert0);
 	auto v1 = viewport.NdcToViewport(projVert1);
@@ -189,6 +189,7 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 	if (ccw)
 	{
 		std::swap(vert1, vert2);
+		std::swap(projVert1, projVert2);
 		std::swap(v1, v2);
 		det012 = -det012;
 	}
