@@ -232,19 +232,6 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 				l1 /= lSum;
 				l2 /= lSum;
 
-				auto finalColor = (c0 * l0) + (c1 * l1) + (c2 * l2);
-				if (drawCall.debugCheckerboard)
-				{
-					if (static_cast<int>(std::floor(finalColor.r * 8.0) + std::floor(finalColor.g * 8.0)) % 2 == 0)
-					{
-						finalColor = { 0, 0, 0, 255 };
-					}
-					else
-					{
-						finalColor = { 255, 255, 255, 255 };
-					}
-				}
-
 				const auto z = (l0 * projVert0.z) + (l1 * projVert1.z) + (l2 * projVert2.z);
 				const uint32_t depth = (0.5 + 0.5 * z) * std::numeric_limits<uint32_t>::max();
 
@@ -256,6 +243,19 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 				if (drawCall.writeDepth)
 				{
 					frameBuffer.depth.SetPixel(x, y, depth);
+				}
+
+				auto finalColor = (c0 * l0) + (c1 * l1) + (c2 * l2);
+				if (drawCall.debugCheckerboard)
+				{
+					if (static_cast<int>(std::floor(finalColor.r * 8.0) + std::floor(finalColor.g * 8.0)) % 2 == 0)
+					{
+						finalColor = { 0, 0, 0, 255 };
+					}
+					else
+					{
+						finalColor = { 255, 255, 255, 255 };
+					}
 				}
 
 				frameBuffer.color.SetPixel(x, y, finalColor);
