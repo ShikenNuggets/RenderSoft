@@ -13,11 +13,6 @@
 #include "MeshAssets.hpp"
 #include "Viewport.hpp"
 
-static inline double Det2D(const Gadget::Vector2& v0, const Gadget::Vector2& v1)
-{
-	return (v0.x * v1.y) - (v0.y * v1.x);
-}
-
 static inline RS::Vertex ClipIntersectEdge(const RS::Vertex& v0, const RS::Vertex& v1, double value0, double value1)
 {
 	const auto t = value0 / (value0 - value1);
@@ -179,7 +174,7 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 	auto v1 = viewport.NdcToViewport(projVert1);
 	auto v2 = viewport.NdcToViewport(projVert2);
 
-	auto det012 = Det2D(v1 - v0, v2 - v0);
+	auto det012 = Gadget::Vector2::Determinant(v1 - v0, v2 - v0);
 	if (Gadget::Math::IsNearZero(det012))
 	{
 		return; // Early out, triangle is very very small
@@ -223,9 +218,9 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 		{
 			auto p = Gadget::Vector2(static_cast<double>(x) + 0.5, static_cast<double>(y) + 0.5);
 
-			const auto det01p = Det2D(v1 - v0, p - v0);
-			const auto det12p = Det2D(v2 - v1, p - v1);
-			const auto det20p = Det2D(v0 - v2, p - v2);
+			const auto det01p = Gadget::Vector2::Determinant(v1 - v0, p - v0);
+			const auto det12p = Gadget::Vector2::Determinant(v2 - v1, p - v1);
+			const auto det20p = Gadget::Vector2::Determinant(v0 - v2, p - v2);
 
 			if (det01p >= 0.0 && det12p >= 0.0 && det20p >= 0.0)
 			{
