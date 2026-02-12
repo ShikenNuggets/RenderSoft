@@ -294,6 +294,17 @@ static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, con
 	}
 }
 
+void CopyFrameBuffer(Gadget::WindowSurfaceView& surfaceView, const RS::FrameBuffer& buffer)
+{
+	for (uint16_t x = 0; x < buffer.Width(); x++)
+	{
+		for (uint16_t y = 0; y < buffer.Height(); y++)
+		{
+			surfaceView.AssignPixel(x, y, buffer.color.GetPixel(x, y));
+		}
+	}
+}
+
 int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
 	static constexpr auto screenW = 800;
@@ -301,15 +312,14 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	std::println("Hello, World!");
 
-	SDL_Window* window = SDL_CreateWindow("Software RasterMan", screenW, screenH, 0);
-	SDL_Surface* screenSurface = SDL_GetWindowSurface(window);
+	auto window = std::make_unique<Gadget::Window>(screenW, screenH, Gadget::RenderAPI::None, "Software RasterMan");
+	auto surfaceView = window->GetSurfaceView();
 
 	RS::FrameCounter counter;
 
 	auto prevTime = std::chrono::system_clock::now().time_since_epoch();
 	auto curTime = prevTime;
 
-	auto imageView = RS::ImageView(screenSurface);
 	auto frameBuffer = RS::FrameBuffer(screenW, screenH);
 
 	auto viewport = RS::Viewport(0, screenW, 0, screenH);
@@ -325,13 +335,15 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
 	auto scale = Gadget::Vector3(1.0, 1.0, 1.0);
 
-	while (true)
+	bool shouldContinue = true;
+	auto quitDelegateHandle = window->EventHandler().OnQuitRequested.Add([&shouldContinue]()
 	{
-		SDL_Event e{};
-		if (SDL_PollEvent(&e) && e.type == SDL_EVENT_QUIT)
-		{
-			break;
-		}
+		shouldContinue = false;
+	});
+
+	while (shouldContinue)
+	{
+		window->HandleEvents();
 
 		curTime = std::chrono::system_clock::now().time_since_epoch();
 		counter.AddFrameTime(std::chrono::duration_cast<std::chrono::microseconds>(curTime - prevTime));
@@ -350,16 +362,18 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		frameBuffer.Clear();
 		Draw(viewport, frameBuffer, RS::DrawCall(cubeMesh, transform));
 
-		imageView.Lock();
-		imageView.Clear(Gadget::Color(0.1f, 0.1f, 0.1f));
-		imageView.CopyFrameBuffer(frameBuffer);
-		imageView.Unlock();
+		surfaceView.Lock();
+		surfaceView.Clear(Gadget::Color(0.1f, 0.1f, 0.1f));
+		CopyFrameBuffer(surfaceView, frameBuffer);
+		surfaceView.Unlock();
 
-		SDL_UpdateWindowSurface(window);
+		window->UpdateWindowSurface();
 		prevTime = curTime;
 	}
 
-	SDL_DestroyWindow(window);
+	window->EventHandler().OnQuitRequested.Remove(quitDelegateHandle);
+
+	window.reset();
 	std::println("Average frame time: {:.3f}ms", counter.GetAverageFrameTimeInMicroseconds() / 1'000.0);
 	return 0;
 }
