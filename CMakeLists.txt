@@ -9,14 +9,6 @@ project ("RenderSoft" LANGUAGES CXX)
 include(FetchContent)
 
 FetchContent_Declare(
-	Assimp
-	GIT_REPOSITORY https://github.com/assimp/assimp.git
-	GIT_TAG v6.0.2
-	EXCLUDE_FROM_ALL
-)
-FetchContent_MakeAvailable(Assimp)
-
-FetchContent_Declare(
 	GadgetCore
 	GIT_REPOSITORY https://github.com/ShikenNuggets/GadgetCore.git
 	GIT_TAG main
