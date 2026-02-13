@@ -4,26 +4,25 @@
 #include <print>
 
 #include <GCore/Window.hpp>
+#include <GCore/Graphics/MeshData.hpp>
 
 #include "DrawCall.hpp"
 #include "FrameBuffer.hpp"
 #include "FrameCounter.hpp"
-#include "ImageView.hpp"
-#include "Mesh.hpp"
 #include "MeshAssets.hpp"
 #include "Viewport.hpp"
 
-static inline RS::Vertex ClipIntersectEdge(const RS::Vertex& v0, const RS::Vertex& v1, double value0, double value1)
+static inline Gadget::Vertex ClipIntersectEdge(const Gadget::Vertex& v0, const Gadget::Vertex& v1, double value0, double value1)
 {
 	const auto t = value0 / (value0 - value1);
 
-	return RS::Vertex(
+	return Gadget::Vertex(
 		(1.0 - t) * v0.position + t * v1.position,
 		(1.0f - static_cast<float>(t)) * v0.color + static_cast<float>(t) * v1.color
 	);
 }
 
-using Triangle = std::array<RS::Vertex, 3>;
+using Triangle = std::array<Gadget::Vertex, 3>;
 
 static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4& equation, std::vector<Triangle>& result)
 {
@@ -279,9 +278,9 @@ static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, con
 		auto clip1 = drawCall.transform * drawCall.mesh.vertices[i1].position;
 		auto clip2 = drawCall.transform * drawCall.mesh.vertices[i2].position;
 
-		const auto clipVert0 = RS::Vertex(clip0, drawCall.mesh.vertices[i0].color);
-		const auto clipVert1 = RS::Vertex(clip1, drawCall.mesh.vertices[i1].color);
-		const auto clipVert2 = RS::Vertex(clip2, drawCall.mesh.vertices[i2].color);
+		const auto clipVert0 = Gadget::Vertex(clip0, drawCall.mesh.vertices[i0].color);
+		const auto clipVert1 = Gadget::Vertex(clip1, drawCall.mesh.vertices[i1].color);
+		const auto clipVert2 = Gadget::Vertex(clip2, drawCall.mesh.vertices[i2].color);
 
 		// To disable view clipping, just rasterize the triangle directly
 		//Rasterize({ clipVert0, clipVert1, clipVert2 }, viewport, frameBuffer, drawCall);
