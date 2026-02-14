@@ -109,3 +109,12 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 	target_compile_definitions(RenderSoft PUBLIC RS_RELEASE)
 endif()
+
+# --------------------------------------- #
+# --------- Asset Deployment ------------ #
+# --------------------------------------- #
+add_custom_command(TARGET RenderSoft POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+		"${CMAKE_CURRENT_SOURCE_DIR}/assets"
+		"$<TARGET_FILE_DIR:RenderSoft>/assets"
+)

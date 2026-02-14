@@ -29,9 +29,9 @@ namespace RS
 	class DrawCall
 	{
 	public:
-		DrawCall(Gadget::MeshData& mesh_, Gadget::Matrix4 transform_ = Gadget::Matrix4::Identity()) : mesh(mesh_), mode(CullMode::CCW), writeDepth(true), depthMode(DepthTestMode::Less), transform(transform_), debugCheckerboard(false){}
+		DrawCall(const Gadget::MeshData& mesh_, Gadget::Matrix4 transform_ = Gadget::Matrix4::Identity()) : mesh(mesh_), mode(CullMode::CCW), writeDepth(true), depthMode(DepthTestMode::Less), transform(transform_), debugCheckerboard(false){}
 
-		Gadget::MeshData& mesh;
+		const Gadget::MeshData& mesh;
 		CullMode mode;
 		bool writeDepth;
 		DepthTestMode depthMode;

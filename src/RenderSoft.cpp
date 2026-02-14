@@ -5,6 +5,7 @@
 
 #include <GCore/Window.hpp>
 #include <GCore/Graphics/MeshData.hpp>
+#include <GCore/Graphics/MeshLoader.hpp>
 
 #include "DrawCall.hpp"
 #include "FrameBuffer.hpp"
@@ -325,14 +326,16 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 
 	auto rectMesh = RS::GetRectMesh();
 	auto cubeMesh = RS::GetCubeMesh();
+	auto testModel = Gadget::MeshLoader::LoadMeshFromFile("assets\\teapot.stl");
+	const auto& testMesh = testModel.meshes[0];
 
 	auto aspect = screenW * 1.0 / screenH;
 
 	auto transform = Gadget::Matrix4::Identity();
 
-	auto pos = Gadget::Vector3(0.0, 0.0, -5.0);
+	auto pos = Gadget::Vector3(0.0, 0.0, -10.0);
 	auto rot = Gadget::Euler(0.0, 0.0, 0.0);
-	auto scale = Gadget::Vector3(1.0, 1.0, 1.0);
+	auto scale = Gadget::Vector3(0.5, 0.5, 0.5);
 
 	bool shouldContinue = true;
 	auto quitDelegateHandle = window->EventHandler().OnQuitRequested.Add([&shouldContinue]()
@@ -359,7 +362,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		transform = Gadget::Matrix4::Perspective(90.0, aspect, 0.01, 1000.0) * transform;
 
 		frameBuffer.Clear();
-		Draw(viewport, frameBuffer, RS::DrawCall(cubeMesh, transform));
+		Draw(viewport, frameBuffer, RS::DrawCall(testMesh, transform));
 
 		surfaceView.Lock();
 		surfaceView.Clear(Gadget::Color(0.1f, 0.1f, 0.1f));
