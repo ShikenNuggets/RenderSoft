@@ -3,6 +3,7 @@
 #include <chrono>
 #include <print>
 
+#include <GCore/ThreadPool.hpp>
 #include <GCore/Window.hpp>
 #include <GCore/Graphics/MeshData.hpp>
 #include <GCore/Graphics/MeshLoader.hpp>
@@ -12,6 +13,9 @@
 #include "FrameCounter.hpp"
 #include "MeshAssets.hpp"
 #include "Viewport.hpp"
+
+std::mutex depthBufferMutex;
+std::mutex colorBufferMutex;
 
 static inline Gadget::Vertex ClipIntersectEdge(const Gadget::Vertex& v0, const Gadget::Vertex& v1, double value0, double value1)
 {
@@ -230,14 +234,18 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 
 				const auto z = (l0 * projVert0.z) + (l1 * projVert1.z) + (l2 * projVert2.z);
 				const uint32_t depth = (0.5 + 0.5 * z) * std::numeric_limits<uint32_t>::max();
-				if (!DepthTest(drawCall.depthMode, depth, frameBuffer.depth.GetPixel(x, y)))
-				{
-					continue;
-				}
 
-				if (drawCall.writeDepth)
 				{
-					frameBuffer.depth.SetPixel(x, y, depth);
+					auto lock = std::lock_guard(depthBufferMutex);
+					if (!DepthTest(drawCall.depthMode, depth, frameBuffer.depth.GetPixel(x, y)))
+					{
+						continue;
+					}
+
+					if (drawCall.writeDepth)
+					{
+						frameBuffer.depth.SetPixel(x, y, depth);
+					}
 				}
 
 				l0 /= det012;
@@ -261,7 +269,10 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 					}
 				}
 
-				frameBuffer.color.SetPixel(x, y, finalColor);
+				{
+					auto lock = std::lock_guard(colorBufferMutex);
+					frameBuffer.color.SetPixel(x, y, finalColor);
+				}
 			}
 		}
 	}
@@ -269,29 +280,42 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 
 static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, const RS::DrawCall& drawCall)
 {
+	static Gadget::ThreadPool threadPool{};
+	threadPool.Start();
+
 	for (size_t i = 0; i + 2 < drawCall.mesh.indices.size(); i += 3)
 	{
-		const auto i0 = drawCall.mesh.indices[i];
-		const auto i1 = drawCall.mesh.indices[i + 1];
-		const auto i2 = drawCall.mesh.indices[i + 2];
-
-		auto clip0 = drawCall.transform * drawCall.mesh.vertices[i0].position;
-		auto clip1 = drawCall.transform * drawCall.mesh.vertices[i1].position;
-		auto clip2 = drawCall.transform * drawCall.mesh.vertices[i2].position;
-
-		const auto clipVert0 = Gadget::Vertex(clip0, drawCall.mesh.vertices[i0].color);
-		const auto clipVert1 = Gadget::Vertex(clip1, drawCall.mesh.vertices[i1].color);
-		const auto clipVert2 = Gadget::Vertex(clip2, drawCall.mesh.vertices[i2].color);
-
-		// To disable view clipping, just rasterize the triangle directly
-		//Rasterize({ clipVert0, clipVert1, clipVert2 }, viewport, frameBuffer, drawCall);
-
-		const auto clippedTris = ClipTriangle({ clipVert0, clipVert1, clipVert2 });
-		for (const auto& tri : clippedTris)
+		threadPool.QueueJob([&, i]()
 		{
-			Rasterize(tri, viewport, frameBuffer, drawCall);
-		}
+			const auto i0 = drawCall.mesh.indices[i];
+			const auto i1 = drawCall.mesh.indices[i + 1];
+			const auto i2 = drawCall.mesh.indices[i + 2];
+
+			auto clip0 = drawCall.transform * drawCall.mesh.vertices[i0].position;
+			auto clip1 = drawCall.transform * drawCall.mesh.vertices[i1].position;
+			auto clip2 = drawCall.transform * drawCall.mesh.vertices[i2].position;
+
+			const auto clipVert0 = Gadget::Vertex(clip0, drawCall.mesh.vertices[i0].color);
+			const auto clipVert1 = Gadget::Vertex(clip1, drawCall.mesh.vertices[i1].color);
+			const auto clipVert2 = Gadget::Vertex(clip2, drawCall.mesh.vertices[i2].color);
+
+			// To disable view clipping, just rasterize the triangle directly
+			//Rasterize({ clipVert0, clipVert1, clipVert2 }, viewport, frameBuffer, drawCall);
+
+			const auto clippedTris = ClipTriangle({ clipVert0, clipVert1, clipVert2 });
+
+			for (const auto& tri : clippedTris)
+			{
+				Rasterize(tri, viewport, frameBuffer, drawCall);
+			}
+		});
 	}
+
+	while (!threadPool.IsBusy())
+	{
+		continue;
+	}
+	threadPool.Stop();
 }
 
 void CopyFrameBuffer(Gadget::WindowSurfaceView& surfaceView, const RS::FrameBuffer& buffer)
