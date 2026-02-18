@@ -16,7 +16,6 @@
 #include "Viewport.hpp"
 
 std::mutex depthBufferMutex;
-std::mutex colorBufferMutex;
 
 static inline Gadget::Vertex ClipIntersectEdge(const Gadget::Vertex& v0, const Gadget::Vertex& v1, double value0, double value1)
 {
@@ -271,10 +270,7 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 					}
 				}
 
-				{
-					auto lock = std::lock_guard(colorBufferMutex);
-					frameBuffer.color.SetPixel(x, y, finalColor);
-				}
+				frameBuffer.color.SetPixel(x, y, finalColor);
 			}
 		}
 	}
