@@ -12,6 +12,7 @@
 #include "FrameBuffer.hpp"
 #include "FrameCounter.hpp"
 #include "MeshAssets.hpp"
+#include "StackVector.hpp"
 #include "Viewport.hpp"
 
 std::mutex depthBufferMutex;
@@ -28,8 +29,9 @@ static inline Gadget::Vertex ClipIntersectEdge(const Gadget::Vertex& v0, const G
 }
 
 using Triangle = std::array<Gadget::Vertex, 3>;
+using ClippedTriangleList = RS::StackVector<Triangle, 12>;
 
-static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4& equation, std::vector<Triangle>& result)
+static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4& equation, ClippedTriangleList& result)
 {
 	std::array<double, 3> values =
 	{
@@ -113,7 +115,7 @@ static inline void ClipTriangle(const Triangle& triangle, const Gadget::Vector4&
 	}
 }
 
-static inline std::vector<Triangle> ClipTriangle(Triangle inTriangle)
+static inline ClippedTriangleList ClipTriangle(Triangle inTriangle)
 {
 	static const std::array<Gadget::Vector4, 2> equations =
 	{
@@ -121,14 +123,14 @@ static inline std::vector<Triangle> ClipTriangle(Triangle inTriangle)
 		Gadget::Vector4(0.0, 0.0, -1.0, 1.0)
 	};
 
-	std::vector<Triangle> eq1Result;
+	ClippedTriangleList eq1Result;
 	eq1Result.reserve(12);
 
 	// Equation 1 - only one triangle to clip
 	ClipTriangle(inTriangle, equations[0], eq1Result);
 
 	// Equation 2 - possibly more than one triangle
-	std::vector<Triangle> eq2Result;
+	ClippedTriangleList eq2Result;
 	eq2Result.reserve(12);
 
 	for (const auto& tri : eq1Result)
