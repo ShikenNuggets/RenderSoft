@@ -281,7 +281,6 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, const RS::DrawCall& drawCall)
 {
 	static Gadget::ThreadPool threadPool{};
-	threadPool.Start();
 
 	for (size_t i = 0; i + 2 < drawCall.mesh.indices.size(); i += 3)
 	{
@@ -311,6 +310,7 @@ static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, con
 		});
 	}
 
+	threadPool.Start();
 	while (threadPool.IsBusy())
 	{
 		continue;
