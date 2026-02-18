@@ -311,7 +311,7 @@ static void Draw(const RS::Viewport& viewport, RS::FrameBuffer& frameBuffer, con
 		});
 	}
 
-	while (!threadPool.IsBusy())
+	while (threadPool.IsBusy())
 	{
 		continue;
 	}
