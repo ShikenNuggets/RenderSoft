@@ -15,7 +15,7 @@
 #include "StackVector.hpp"
 #include "Viewport.hpp"
 
-std::mutex depthBufferMutex;
+std::array<std::mutex, 32> depthBufferMutices;
 
 static inline Gadget::Vertex ClipIntersectEdge(const Gadget::Vertex& v0, const Gadget::Vertex& v1, double value0, double value1)
 {
@@ -237,7 +237,8 @@ static void Rasterize(const Triangle& tri, const RS::Viewport& viewport, RS::Fra
 				const uint32_t depth = (0.5 + 0.5 * z) * std::numeric_limits<uint32_t>::max();
 
 				{
-					auto lock = std::lock_guard(depthBufferMutex);
+					const auto pixelIdx = (y * frameBuffer.Height()) + x;
+					auto lock = std::lock_guard(depthBufferMutices.at(pixelIdx % depthBufferMutices.size()));
 					if (!DepthTest(drawCall.depthMode, depth, frameBuffer.depth.GetPixel(x, y)))
 					{
 						continue;
