@@ -188,7 +188,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 	std::println("Hello, World!");
 
 	auto window = std::make_unique<Gadget::Window>(screenW, screenH, Gadget::RenderAPI::None, "Software RasterMan");
-	auto surfaceView = window->GetSurfaceView();
 
 	RS::FrameCounter counter;
 
@@ -218,6 +217,13 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		shouldContinue = false;
 	});
 
+	auto resizeDelegateHandle = window->EventHandler().OnWindowResized.Add([&aspect, &frameBuffer, &viewport](int32_t w, int32_t h)
+	{
+		aspect = w * 1.0 / h;
+		frameBuffer = RS::FrameBuffer(w, h);
+		viewport = RS::Viewport(0, w, 0, h);
+	});
+
 	while (shouldContinue)
 	{
 		window->HandleEvents();
@@ -239,6 +245,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		frameBuffer.Clear();
 		Draw(viewport, frameBuffer, RS::DrawCall(testMesh, transform));
 
+		auto surfaceView = window->GetSurfaceView();
 		surfaceView.Lock();
 		surfaceView.Clear(Gadget::Color(0.1f, 0.1f, 0.1f));
 		CopyFrameBuffer(surfaceView, frameBuffer);
@@ -248,6 +255,7 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		prevTime = curTime;
 	}
 
+	window->EventHandler().OnWindowResized.Remove(resizeDelegateHandle);
 	window->EventHandler().OnQuitRequested.Remove(quitDelegateHandle);
 
 	window.reset();
