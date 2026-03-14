@@ -255,9 +255,6 @@ int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 		prevTime = curTime;
 	}
 
-	window->EventHandler().OnWindowResized.Remove(resizeDelegateHandle);
-	window->EventHandler().OnQuitRequested.Remove(quitDelegateHandle);
-
 	window.reset();
 	std::println("Average frame time: {:.3f}ms", counter.GetAverageFrameTimeInMicroseconds() / 1'000.0);
 	return 0;
