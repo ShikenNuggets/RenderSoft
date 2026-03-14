@@ -7,75 +7,58 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  build-all:
+    runs-on: ${{ matrix.config.os }}
 
     strategy:
       fail-fast: true
       
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release]
-        c_compiler: [gcc-14, clang, cl]
-        include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
-
-          - os: windows-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-
-          - os: ubuntu-latest
-            c_compiler: gcc-14
-            cpp_compiler: g++-14
-
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-
-          - os: macos-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc-14
-          - os: ubuntu-latest
-            c_compiler: cl
-          - os: macos-latest
-            c_compiler: gcc-14
-          - os: macos-latest
-            c_compiler: cl
+        config:
+          - { os: windows-latest, c: cl, cpp: cl }
+          - { os: windows-latest, c: clang, cpp: clang++ }
+          - { os: macos-latest, c: clang, cpp: clang++ }
 
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
-    - name: Install GCC 14
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-        sudo apt-get update
-        sudo apt-get install -y gcc-14 g++-14
-
+    
     - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        cmake -B build
+        -DCMAKE_CXX_COMPILER=${{ matrix.config.cpp }}
+        -DCMAKE_C_COMPILER=${{ matrix.config.c }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DSDL_UNIX_CONSOLE_BUILD=ON
-        -S ${{ github.workspace }}
+        -S .
 
     - name: Build
-      # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+      run: cmake --build build --config ${{ matrix.build_type }}
+
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: shikennuggets/arch-build-env:latest
+      
+    strategy:
+      fail-fast: true
+      matrix:
+        build_type: [Release]
+        compiler:
+          - { c: gcc, cpp: g++ }
+          - { c: clang, cpp: clang++ }
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure CMake
+      run: >
+        cmake -B build
+        -DCMAKE_CXX_COMPILER=${{ matrix.compiler.cpp }}
+        -DCMAKE_C_COMPILER=${{ matrix.compiler.c }}
+        -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DSDL_UNIX_CONSOLE_BUILD=ON
+        -S .
+
+    - name: Build
+      run: cmake --build build --config ${{ matrix.build_type }}
