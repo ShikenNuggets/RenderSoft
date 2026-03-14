@@ -11,7 +11,7 @@ include(FetchContent)
 FetchContent_Declare(
 	GadgetCore
 	GIT_REPOSITORY https://github.com/ShikenNuggets/GadgetCore.git
-	GIT_TAG main
+	GIT_TAG 3a5a7bd72ebf750542b23d3926213d442615b57b
 )
 set(GADGETCORE_BUILD_TESTS OFF)
 set(GADGETCORE_BUILD_DEMOS OFF)
